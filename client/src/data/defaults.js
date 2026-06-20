@@ -68,6 +68,9 @@ export const DEFAULT_SECTIONS = [
 ];
 
 // --- Periods (periodes) by system -------------------------------------
+// Document MINEDUC : le primaire a 3 trimestres (2 périodes chacun = 6
+// périodes), le secondaire a 2 semestres (2 périodes chacun = 4 périodes).
+// Chaque trimestre/semestre = 2 périodes de Travaux Journaliers + 1 Examen.
 export function defaultPeriodes(systeme) {
   if (systeme === 'semestre') {
     return [
@@ -80,4 +83,13 @@ export function defaultPeriodes(systeme) {
     { nom: '2ème Trimestre', type: 'trimestre', numero: 2 },
     { nom: '3ème Trimestre', type: 'trimestre', numero: 3 },
   ];
+}
+
+// Labels of the 2 Travaux-Journaliers sub-periods inside a trimester/semester
+// (as printed on the official bulletin: 1ère P., 2e P., 3e P., …).
+export function subPeriodes(numero) {
+  const a = numero * 2 - 1;
+  const b = numero * 2;
+  const ord = (n) => (n === 1 ? '1ère' : `${n}ème`);
+  return [`${ord(a)} période`, `${ord(b)} période`];
 }

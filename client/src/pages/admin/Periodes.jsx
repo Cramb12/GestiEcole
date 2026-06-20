@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase.js';
 import { useEcole } from '../../lib/useEcole.js';
-import { defaultPeriodes } from '../../data/defaults.js';
+import { defaultPeriodes, subPeriodes } from '../../data/defaults.js';
 import AdminLayout from '../../components/AdminLayout.jsx';
 import Modal from '../../components/Modal.jsx';
 
@@ -146,6 +146,12 @@ export default function Periodes() {
 
       {msg && <div className={msg.type === 'success' ? 'alert-success' : 'alert-error'}>{msg.text}</div>}
 
+      <div className="locked-banner">
+        Structure officielle : au <strong>primaire</strong>, 3 trimestres de <strong>2 périodes</strong> chacun (6 périodes) ;
+        au <strong>secondaire</strong>, 2 semestres de <strong>2 périodes</strong> chacun (4 périodes). Chaque trimestre/semestre
+        comporte 2 périodes de <strong>Travaux Journaliers</strong> + 1 <strong>Examen</strong> (la saisie des notes suivra cette structure en Phase 5).
+      </div>
+
       {loading ? (
         <div className="empty-state">Chargement…</div>
       ) : periodes.length === 0 ? (
@@ -157,6 +163,7 @@ export default function Periodes() {
               <tr>
                 <th style={{ width: 60 }}>N°</th>
                 <th>Période</th>
+                <th>Composition (Travaux Journaliers + Examen)</th>
                 <th>Début</th>
                 <th>Fin</th>
                 <th>Statut</th>
@@ -168,6 +175,12 @@ export default function Periodes() {
                 <tr key={p.id}>
                   <td>{p.numero}</td>
                   <td><strong>{p.nom}</strong></td>
+                  <td>
+                    {subPeriodes(p.numero).map((sp) => (
+                      <span key={sp} className="pill pill-blue" style={{ marginRight: 6 }}>{sp}</span>
+                    ))}
+                    <span className="pill pill-gray">Examen</span>
+                  </td>
                   <td>{p.date_debut || '—'}</td>
                   <td>{p.date_fin || '—'}</td>
                   <td>
