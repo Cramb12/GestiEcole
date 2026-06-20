@@ -35,18 +35,36 @@ export function defaultBranches(niveauType) {
   return niveauType === 'secondaire' ? BRANCHES_SECONDAIRE : BRANCHES_PRIMAIRE;
 }
 
-// --- Sections d'humanités (liste standard, à ajuster selon le document officiel) ---
+// --- Sections d'humanités (officielles MINEDUC 2024-2025, par ordre alphabétique) ---
 export const DEFAULT_SECTIONS = [
-  { nom: 'Scientifique', code: 'SCI' },
-  { nom: 'Littéraire', code: 'LIT' },
-  { nom: 'Commerciale et Gestion', code: 'CG' },
-  { nom: 'Pédagogique', code: 'PED' },
-  { nom: 'Coupe et Couture', code: 'CC' },
-  { nom: 'Électricité', code: 'ELE' },
-  { nom: 'Mécanique', code: 'MEC' },
+  { nom: 'Agriculture Générale', code: 'AGRI' },
+  { nom: 'Arts Plastiques', code: 'ART' },
+  { nom: 'Coiffure', code: 'COIF' },
   { nom: 'Construction', code: 'CONS' },
-  { nom: 'Agricole', code: 'AGR' },
-  { nom: 'Hôtellerie', code: 'HOT' },
+  { nom: 'Éducation Physique', code: 'EPS' },
+  { nom: 'Électricité Générale', code: 'ELEC' },
+  { nom: 'Foresterie', code: 'FOR' },
+  { nom: "Technique d'Hébergement", code: 'HEB' },
+  { nom: 'Hôtellerie et Restauration', code: 'HOTR' },
+  { nom: 'Hydro-Pneumatique', code: 'HYDR' },
+  { nom: 'Industries Agricoles', code: 'INDA' },
+  { nom: 'Latin – Philosophie', code: 'LP' },
+  { nom: 'Latin – Grec', code: 'LG' },
+  { nom: 'Latin – Mathématiques', code: 'LM' },
+  { nom: 'Mécanique / Machines-Outils', code: 'MMO' },
+  { nom: 'Menuiserie – Ébénisterie', code: 'MEN' },
+  { nom: 'Mécanique Automobile', code: 'MECA' },
+  { nom: 'Musique', code: 'MUS' },
+  { nom: 'Nutrition', code: 'NUT' },
+  { nom: 'Pêche et Navigation', code: 'PEN' },
+  { nom: 'Pédagogie Générale', code: 'PEDG' },
+  { nom: 'Pédagogie Générale / Cycle Court', code: 'PGCC' },
+  { nom: 'Pédagogie Maternelle', code: 'PEDM' },
+  { nom: 'Pédagogie Pré-Scolaire', code: 'PEDP' },
+  { nom: 'Scientifique', code: 'SCI' },
+  { nom: 'Secrétariat & Administration', code: 'SEC' },
+  { nom: 'Sociale', code: 'SOC' },
+  { nom: 'Vétérinaire', code: 'VET' },
 ];
 
 // --- Periods (periodes) by system -------------------------------------

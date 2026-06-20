@@ -21,3 +21,7 @@ npm-debug.log*
 
 # Misc
 coverage/
+
+# Local reference (MINEDUC bulletin PDF extraction — Phases 5/6)
+pdf_text.txt
+extract_pdf.py
