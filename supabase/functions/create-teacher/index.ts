@@ -7,7 +7,7 @@
 // Deploy (dashboard): Edge Functions → Deploy a new function → name it
 // "create-teacher" → paste this file → Deploy. SUPABASE_URL and
 // SUPABASE_SERVICE_ROLE_KEY are injected automatically.
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
