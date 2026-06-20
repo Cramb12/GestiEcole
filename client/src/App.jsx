@@ -1,10 +1,15 @@
-// App routes — role-based redirection.
+// App routes — role-based redirection + admin configuration screens.
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Login from './pages/Login.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import TeacherDashboard from './pages/TeacherDashboard.jsx';
+import Configuration from './pages/admin/Configuration.jsx';
+import Classes from './pages/admin/Classes.jsx';
+import Branches from './pages/admin/Branches.jsx';
+import Enseignants from './pages/admin/Enseignants.jsx';
+import Periodes from './pages/admin/Periodes.jsx';
 
 // Sends a logged-in user to the correct home, or to /login otherwise.
 function Home() {
@@ -14,21 +19,26 @@ function Home() {
   return <Navigate to={user.role === 'super_admin' ? '/admin' : '/enseignant'} replace />;
 }
 
+// Helper to wrap an admin-only page.
+function Admin({ children }) {
+  return <ProtectedRoute role="super_admin">{children}</ProtectedRoute>;
+}
+
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
 
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute role="super_admin">
-            <AdminDashboard />
-          </ProtectedRoute>
-        }
-      />
+      {/* Super Admin */}
+      <Route path="/admin" element={<Admin><AdminDashboard /></Admin>} />
+      <Route path="/admin/configuration" element={<Admin><Configuration /></Admin>} />
+      <Route path="/admin/classes" element={<Admin><Classes /></Admin>} />
+      <Route path="/admin/matieres" element={<Admin><Branches /></Admin>} />
+      <Route path="/admin/enseignants" element={<Admin><Enseignants /></Admin>} />
+      <Route path="/admin/periodes" element={<Admin><Periodes /></Admin>} />
 
+      {/* Teacher */}
       <Route
         path="/enseignant"
         element={

@@ -1,17 +1,21 @@
 // Super Admin dashboard — school info, quick stats, navigation menu.
 // Data is read directly from Supabase (protected by RLS: admin sees all).
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase.js';
 import Layout from '../components/Layout.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 
-// Navigation items. "ready: false" tiles are placeholders for later phases.
+// Navigation items. Items with `to` are live; others are placeholders.
 const MENU = [
-  { ico: '⚙️', label: 'Configuration', ready: false },
+  { ico: '⚙️', label: "Configuration de l'école", to: '/admin/configuration' },
+  { ico: '🏫', label: 'Classes', to: '/admin/classes' },
+  { ico: '📚', label: 'Matières', to: '/admin/matieres' },
+  { ico: '👩‍🏫', label: 'Enseignants', to: '/admin/enseignants' },
+  { ico: '🗓️', label: 'Périodes', to: '/admin/periodes' },
   { ico: '👨‍🎓', label: 'Élèves', ready: false },
-  { ico: '👩‍🏫', label: 'Enseignants', ready: false },
   { ico: '📝', label: 'Notes', ready: false },
-  { ico: '🗓️', label: 'Présences', ready: false },
+  { ico: '✅', label: 'Présences', ready: false },
   { ico: '📄', label: 'Bulletins', ready: false },
   { ico: '📊', label: 'Rapports', ready: false },
 ];
@@ -108,13 +112,20 @@ export default function AdminDashboard() {
 
           <div className="section-title">Menu de navigation</div>
           <div className="nav-grid">
-            {MENU.map((m) => (
-              <div className="nav-tile" key={m.label}>
-                <span className="ico">{m.ico}</span>
-                {m.label}
-                {!m.ready && <span className="soon">Bientôt disponible</span>}
-              </div>
-            ))}
+            {MENU.map((m) =>
+              m.to ? (
+                <Link className="nav-tile" key={m.label} to={m.to} style={{ textDecoration: 'none' }}>
+                  <span className="ico">{m.ico}</span>
+                  {m.label}
+                </Link>
+              ) : (
+                <div className="nav-tile" key={m.label}>
+                  <span className="ico">{m.ico}</span>
+                  {m.label}
+                  <span className="soon">Bientôt disponible</span>
+                </div>
+              )
+            )}
           </div>
         </>
       )}
