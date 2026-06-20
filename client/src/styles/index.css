@@ -1,0 +1,220 @@
+/* ============================================================
+   Thème — Système de Gestion Scolaire RDC
+   Couleurs du drapeau : bleu ciel, jaune, rouge.
+   ============================================================ */
+:root {
+  --bleu: #0b6fb8;        /* bleu RDC */
+  --bleu-fonce: #084c7d;
+  --jaune: #f7c948;       /* jaune RDC */
+  --rouge: #ce1126;       /* rouge RDC */
+  --gris-fond: #f4f6f9;
+  --gris-bord: #e2e8f0;
+  --texte: #1f2937;
+  --texte-clair: #6b7280;
+  --blanc: #ffffff;
+  --ombre: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --radius: 12px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background: var(--gris-fond);
+  color: var(--texte);
+  line-height: 1.5;
+}
+
+.center-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  color: var(--texte-clair);
+}
+
+/* ---------- Boutons ---------- */
+button { cursor: pointer; font-family: inherit; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 600;
+  transition: transform 0.05s ease, opacity 0.2s ease;
+}
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-primary { background: var(--bleu); color: #fff; }
+.btn-primary:hover { background: var(--bleu-fonce); }
+.btn-ghost { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.6); }
+
+/* ---------- Login ---------- */
+.login-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: linear-gradient(135deg, var(--bleu) 0%, var(--bleu-fonce) 100%);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--blanc);
+  border-radius: 18px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  padding: 36px 32px;
+}
+
+.login-logo {
+  width: 72px; height: 72px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  background: var(--jaune);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 34px;
+  border: 3px solid var(--rouge);
+}
+
+.login-title { text-align: center; font-size: 20px; font-weight: 700; }
+.login-sub { text-align: center; color: var(--texte-clair); font-size: 14px; margin-bottom: 24px; }
+
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.field input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--gris-bord);
+  border-radius: var(--radius);
+  font-size: 15px;
+}
+.field input:focus { outline: 2px solid var(--bleu); border-color: var(--bleu); }
+
+.alert-error {
+  background: #fde8ea;
+  color: var(--rouge);
+  border: 1px solid #f5c2c7;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.login-hint {
+  margin-top: 18px;
+  font-size: 12.5px;
+  color: var(--texte-clair);
+  text-align: center;
+  line-height: 1.7;
+}
+
+/* ---------- Layout (topbar) ---------- */
+.topbar {
+  background: var(--bleu);
+  color: #fff;
+  padding: 14px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--ombre);
+}
+.topbar .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; }
+.topbar .brand .dot {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--jaune); color: var(--bleu-fonce);
+  display: flex; align-items: center; justify-content: center; font-size: 18px;
+}
+.topbar .user-box { display: flex; align-items: center; gap: 14px; font-size: 14px; }
+.topbar .badge {
+  background: rgba(255,255,255,0.18);
+  padding: 4px 10px; border-radius: 20px; font-size: 12px;
+}
+
+.page { max-width: 1100px; margin: 0 auto; padding: 26px 20px; }
+
+.welcome h1 { font-size: 24px; margin-bottom: 4px; }
+.welcome p { color: var(--texte-clair); margin-bottom: 22px; }
+
+/* ---------- Cartes de stats ---------- */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.stat-card {
+  background: var(--blanc);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--ombre);
+  border-left: 5px solid var(--bleu);
+}
+.stat-card .value { font-size: 32px; font-weight: 800; color: var(--bleu-fonce); }
+.stat-card .label { color: var(--texte-clair); font-size: 14px; margin-top: 2px; }
+.stat-card.j { border-left-color: var(--jaune); }
+.stat-card.r { border-left-color: var(--rouge); }
+
+/* ---------- Menu de navigation ---------- */
+.section-title { font-size: 16px; font-weight: 700; margin: 8px 0 14px; }
+
+.nav-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+}
+.nav-tile {
+  background: var(--blanc);
+  border: 1px solid var(--gris-bord);
+  border-radius: var(--radius);
+  padding: 18px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--texte);
+  transition: box-shadow 0.15s ease, transform 0.05s ease;
+}
+.nav-tile:hover { box-shadow: var(--ombre); }
+.nav-tile .ico { font-size: 26px; display: block; margin-bottom: 8px; }
+.nav-tile .soon { display: block; font-size: 11px; color: var(--texte-clair); font-weight: 500; margin-top: 4px; }
+
+/* ---------- Cartes d'affectation (enseignant) ---------- */
+.assign-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+.assign-card {
+  background: var(--blanc);
+  border-radius: var(--radius);
+  box-shadow: var(--ombre);
+  padding: 18px;
+  border-top: 4px solid var(--jaune);
+}
+.assign-card .branche { font-size: 17px; font-weight: 700; color: var(--bleu-fonce); }
+.assign-card .meta { font-size: 13px; color: var(--texte-clair); margin-top: 4px; }
+.assign-card .classe-pill {
+  display: inline-block; margin-top: 10px;
+  background: var(--gris-fond); border-radius: 20px;
+  padding: 4px 12px; font-size: 13px; font-weight: 600;
+}
+
+.empty-state {
+  background: var(--blanc);
+  border: 1px dashed var(--gris-bord);
+  border-radius: var(--radius);
+  padding: 30px;
+  text-align: center;
+  color: var(--texte-clair);
+}
+
+@media (max-width: 600px) {
+  .topbar .user-box .who { display: none; }
+  .page { padding: 18px 14px; }
+}
