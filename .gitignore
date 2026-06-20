@@ -25,3 +25,5 @@ coverage/
 # Local reference (MINEDUC bulletin PDF extraction — Phases 5/6)
 pdf_text.txt
 extract_pdf.py
+parse_courses.py
+courses.json

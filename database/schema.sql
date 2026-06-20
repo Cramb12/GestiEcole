@@ -97,13 +97,16 @@ CREATE TABLE IF NOT EXISTS eleves (
 -- 6. BRANCHES
 -- =====================================================================
 CREATE TABLE IF NOT EXISTS branches (
-    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    nom         VARCHAR(120) NOT NULL,
-    domaine     VARCHAR(150),
-    max_points  INTEGER NOT NULL DEFAULT 0,
-    niveau_id   UUID NOT NULL REFERENCES niveaux(id) ON DELETE CASCADE,
-    ordre       INTEGER NOT NULL DEFAULT 0,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    nom          VARCHAR(120) NOT NULL,
+    domaine      VARCHAR(150),
+    sous_domaine VARCHAR(150),                          -- sous-groupe (ex: FRANÇAIS)
+    max_points   INTEGER NOT NULL DEFAULT 0,            -- maximum par période
+    niveau_id    UUID NOT NULL REFERENCES niveaux(id) ON DELETE CASCADE,
+    section_id   UUID REFERENCES sections(id) ON DELETE SET NULL,  -- humanités
+    annee        VARCHAR(10),                           -- '5','6','7','8','1'..'4','1-2' ou NULL
+    ordre        INTEGER NOT NULL DEFAULT 0,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- =====================================================================
