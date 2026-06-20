@@ -17,7 +17,7 @@ export default function Layout({ children, ecoleNom }) {
     <div>
       <header className="topbar">
         <div className="brand">
-          <span className="dot">🎓</span>
+          <span className="dot">{(ecoleNom || 'Gestion Scolaire').charAt(0).toUpperCase()}</span>
           <span>{ecoleNom || 'Gestion Scolaire'}</span>
         </div>
         <div className="user-box">

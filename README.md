@@ -75,14 +75,14 @@ npm run dev              # http://localhost:5173
 | Super Admin | `directeur@ecole.cd` | `admin123` |
 | Enseignant | `enseignant@ecole.cd` | `prof123` |
 
-> ⚠️ Changez ces mots de passe avant toute mise en production.
+>  Changez ces mots de passe avant toute mise en production.
 
 ---
 
 ## Déploiement sur Vercel
 
 1. **Importez** le dépôt GitHub dans Vercel.
-2. **Root Directory** → `client` ⚠️ (sinon erreur 404).
+2. **Root Directory** → `client`  (sinon erreur 404).
 3. **Framework Preset** → Vite.
 4. **Environment Variables** (les deux seules nécessaires) :
    - `VITE_SUPABASE_URL`

@@ -124,7 +124,7 @@ export default function Enseignants() {
   return (
     <AdminLayout title="Gestion des enseignants" subtitle="Créez les comptes enseignants et affectez-leur des matières par classe." ecoleNom={ecole?.nom_ecole}>
       <div className="toolbar">
-        <button className="btn btn-primary btn-sm" onClick={openCreate}>＋ Nouvel enseignant</button>
+        <button className="btn btn-primary btn-sm" onClick={openCreate}>+ Nouvel enseignant</button>
         <div className="spacer" />
         <span className="admin-sub" style={{ margin: 0 }}>{teachers.length} enseignant(s)</span>
       </div>
@@ -264,7 +264,7 @@ function AssignmentsModal({ teacher, name, classes, branches, rows, onAdd, onRem
         disabled={!classeId || !brancheId}
         onClick={() => { onAdd(classeId, brancheId); setBrancheId(''); }}
       >
-        ＋ Ajouter
+        + Ajouter
       </button>
 
       <h3 style={{ fontSize: 14, margin: '22px 0 10px' }}>Affectations actuelles</h3>

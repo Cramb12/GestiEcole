@@ -11,7 +11,7 @@ dotenv.config();
 const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-  console.error('❌ SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY sont requis dans .env');
+  console.error(' SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY sont requis dans .env');
   process.exit(1);
 }
 
@@ -41,19 +41,19 @@ async function ensureUser(email, password) {
 }
 
 async function seed() {
-  console.log('🌱 Initialisation des données de test...');
+  console.log(' Initialisation des données de test...');
 
   // --- Comptes Auth ----------------------------------------------------
   const adminId = await ensureUser('directeur@ecole.cd', 'admin123');
   const profId = await ensureUser('enseignant@ecole.cd', 'prof123');
-  console.log('  ✔ Comptes Auth créés/retrouvés');
+  console.log('   Comptes Auth créés/retrouvés');
 
   // --- Profils ---------------------------------------------------------
   await admin.from('profiles').upsert([
     { id: adminId, nom: 'Directeur', postnom: 'Général', email: 'directeur@ecole.cd', role: 'super_admin' },
     { id: profId, nom: 'Kamau', postnom: 'Jean', email: 'enseignant@ecole.cd', role: 'teacher' },
   ]);
-  console.log('  ✔ Profils enregistrés');
+  console.log('   Profils enregistrés');
 
   // --- École (une seule) ----------------------------------------------
   const { data: existingEcole } = await admin.from('ecole').select('id').limit(1).maybeSingle();
@@ -73,7 +73,7 @@ async function seed() {
       .single();
     ecoleId = data.id;
   }
-  console.log('  ✔ École prête');
+  console.log('   École prête');
 
   // --- Niveaux (les 5 templates de bulletin) --------------------------
   const niveauxDef = [
@@ -101,7 +101,7 @@ async function seed() {
       niveauIds[tpl] = data.id;
     }
   }
-  console.log('  ✔ 5 niveaux prêts');
+  console.log('   5 niveaux prêts');
 
   // --- 1 classe + 2 branches + 1 affectation (exemple) ----------------
   const { data: existingClasse } = await admin
@@ -138,15 +138,15 @@ async function seed() {
       annee_scolaire: ANNEE,
     });
   }
-  console.log('  ✔ Classe, branches et affectation d\'exemple prêtes');
+  console.log('   Classe, branches et affectation d\'exemple prêtes');
 
-  console.log('\n✅ Données de test insérées avec succès !');
+  console.log('\n Données de test insérées avec succès !');
   console.log('\n   Comptes de connexion :');
   console.log('   • Super Admin  → directeur@ecole.cd / admin123');
   console.log('   • Enseignant   → enseignant@ecole.cd / prof123\n');
 }
 
 seed().catch((err) => {
-  console.error('❌ Échec du seed :', err.message || err);
+  console.error(' Échec du seed :', err.message || err);
   process.exit(1);
 });

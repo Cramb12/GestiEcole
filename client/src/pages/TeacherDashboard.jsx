@@ -5,11 +5,7 @@ import { supabase } from '../lib/supabase.js';
 import Layout from '../components/Layout.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 
-const QUICK = [
-  { ico: '🗓️', label: 'Présences' },
-  { ico: '📝', label: 'Notes' },
-  { ico: '📄', label: 'Bulletins' },
-];
+const QUICK = ['Présences', 'Notes', 'Bulletins'];
 
 export default function TeacherDashboard() {
   const { user } = useAuth();
@@ -69,7 +65,7 @@ export default function TeacherDashboard() {
   return (
     <Layout ecoleNom={ecole?.nom_ecole}>
       <div className="welcome">
-        <h1>Bonjour, {user?.nom} 👋</h1>
+        <h1>Bonjour, {user?.nom}</h1>
         <p>
           Bienvenue sur votre espace enseignant
           {ecole?.annee_scolaire ? ` — Année ${ecole.annee_scolaire}` : ''}
@@ -99,7 +95,7 @@ export default function TeacherDashboard() {
           {affectations.length === 0 ? (
             <div className="empty-state">
               Aucun cours ne vous est encore assigné.<br />
-              L'administrateur vous attribuera des matières et des classes (Phase 2).
+              L'administrateur vous attribuera des matières et des classes.
             </div>
           ) : (
             <div className="assign-grid">
@@ -107,7 +103,7 @@ export default function TeacherDashboard() {
                 <div className="assign-card" key={a.id}>
                   <div className="branche">{a.branche}</div>
                   <div className="meta">{a.domaine}</div>
-                  <span className="classe-pill">📚 {a.classe}</span>
+                  <span className="classe-pill">{a.classe}</span>
                 </div>
               ))}
             </div>
@@ -115,10 +111,9 @@ export default function TeacherDashboard() {
 
           <div className="section-title" style={{ marginTop: 28 }}>Accès rapide</div>
           <div className="nav-grid">
-            {QUICK.map((q) => (
-              <div className="nav-tile" key={q.label}>
-                <span className="ico">{q.ico}</span>
-                {q.label}
+            {QUICK.map((label) => (
+              <div className="nav-tile" key={label}>
+                {label}
                 <span className="soon">Bientôt disponible</span>
               </div>
             ))}

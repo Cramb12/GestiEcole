@@ -3,12 +3,12 @@ import { NavLink } from 'react-router-dom';
 import Layout from './Layout.jsx';
 
 const LINKS = [
-  { to: '/admin', label: 'Tableau de bord', icon: '🏠', end: true },
-  { to: '/admin/configuration', label: 'École', icon: '⚙️' },
-  { to: '/admin/classes', label: 'Classes', icon: '🏫' },
-  { to: '/admin/matieres', label: 'Matières', icon: '📚' },
-  { to: '/admin/enseignants', label: 'Enseignants', icon: '👩‍🏫' },
-  { to: '/admin/periodes', label: 'Périodes', icon: '🗓️' },
+  { to: '/admin', label: 'Tableau de bord', end: true },
+  { to: '/admin/configuration', label: 'École' },
+  { to: '/admin/classes', label: 'Classes' },
+  { to: '/admin/matieres', label: 'Matières' },
+  { to: '/admin/enseignants', label: 'Enseignants' },
+  { to: '/admin/periodes', label: 'Périodes' },
 ];
 
 export default function AdminLayout({ title, subtitle, ecoleNom, children }) {
@@ -23,7 +23,7 @@ export default function AdminLayout({ title, subtitle, ecoleNom, children }) {
               end={l.end}
               className={({ isActive }) => 'side-link' + (isActive ? ' active' : '')}
             >
-              <span>{l.icon}</span> {l.label}
+              {l.label}
             </NavLink>
           ))}
         </aside>

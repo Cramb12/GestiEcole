@@ -119,8 +119,8 @@ export default function Branches() {
           </select>
         </div>
         <div className="spacer" />
-        <button className="btn btn-outline btn-sm" onClick={preload}>⬇ Pré-charger les matières DRC</button>
-        <button className="btn btn-primary btn-sm" onClick={openCreate}>＋ Nouvelle matière</button>
+        <button className="btn btn-outline btn-sm" onClick={preload}>Pré-charger les matières DRC</button>
+        <button className="btn btn-primary btn-sm" onClick={openCreate}>+ Nouvelle matière</button>
       </div>
 
       {msg && <div className={msg.type === 'success' ? 'alert-success' : 'alert-error'}>{msg.text}</div>}

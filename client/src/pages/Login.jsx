@@ -43,7 +43,7 @@ export default function Login() {
   return (
     <div className="login-wrap">
       <form className="login-card" onSubmit={handleSubmit}>
-        <div className="login-logo">🎓</div>
+        <div className="login-logo">GS</div>
         <div className="login-title">Système de Gestion Scolaire</div>
         <div className="login-sub">République Démocratique du Congo</div>
 

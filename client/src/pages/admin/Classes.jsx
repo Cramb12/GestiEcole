@@ -105,7 +105,7 @@ export default function Classes() {
   return (
     <AdminLayout title="Gestion des classes" subtitle="Créez vos classes et assignez un niveau et un titulaire." ecoleNom={ecole?.nom_ecole}>
       <div className="toolbar">
-        <button className="btn btn-primary btn-sm" onClick={openCreate}>＋ Nouvelle classe</button>
+        <button className="btn btn-primary btn-sm" onClick={openCreate}>+ Nouvelle classe</button>
         <div className="spacer" />
         <span className="admin-sub" style={{ margin: 0 }}>{classes.length} classe(s)</span>
       </div>

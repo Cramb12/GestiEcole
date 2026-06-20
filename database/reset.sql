@@ -2,7 +2,7 @@
 -- RESET — supprime toutes les tables applicatives (et l'ancienne table
 -- "users") pour repartir proprement sur le schéma Supabase-only.
 --
--- ⚠️ DESTRUCTIF : efface les données applicatives. Les comptes Supabase
+--  DESTRUCTIF : efface les données applicatives. Les comptes Supabase
 -- Auth (auth.users) NE sont PAS touchés.
 --
 -- À exécuter dans le SQL Editor de Supabase, PUIS ré-exécuter schema.sql.

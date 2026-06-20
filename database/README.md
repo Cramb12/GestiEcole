@@ -17,7 +17,7 @@ Ce dossier contient le schéma complet de la base de données PostgreSQL.
 | `classes` | Classes (ex: "1ère A") |
 | `eleves` | Élèves inscrits |
 | `branches` | Matières / cours par niveau |
-| `enseignant_branches` | Affectations enseignant ↔ matière ↔ classe |
+| `enseignant_branches` | Affectations enseignant  matière  classe |
 | `periodes` | Trimestres / Semestres |
 | `notes` | Notes / cotes des élèves |
 | `presences` | Présences (journalières ou par cours) |

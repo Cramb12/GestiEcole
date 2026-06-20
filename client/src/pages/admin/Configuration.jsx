@@ -125,7 +125,7 @@ export default function Configuration() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 20 }}>
             <img
               className="logo-preview"
-              src={form.logo_url || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="90" height="90"><rect width="90" height="90" fill="%23f4f6f9"/><text x="45" y="50" font-size="34" text-anchor="middle">🏫</text></svg>'}
+              src={form.logo_url || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="90" height="90"><rect width="90" height="90" fill="%23f4f6f9"/><text x="45" y="52" font-size="15" fill="%239aa5b1" text-anchor="middle">Logo</text></svg>'}
               alt="Logo de l'école"
             />
             <div>
@@ -164,7 +164,7 @@ export default function Configuration() {
 
           <div style={{ marginTop: 20 }}>
             <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? 'Enregistrement…' : '💾 Enregistrer'}
+              {saving ? 'Enregistrement…' : 'Enregistrer'}
             </button>
           </div>
         </form>

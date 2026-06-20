@@ -140,8 +140,8 @@ export default function Periodes() {
           </select>
         </div>
         <div className="spacer" />
-        <button className="btn btn-outline btn-sm" onClick={preload}>⬇ Pré-charger les périodes</button>
-        <button className="btn btn-primary btn-sm" onClick={openCreate}>＋ Nouvelle période</button>
+        <button className="btn btn-outline btn-sm" onClick={preload}>Pré-charger les périodes</button>
+        <button className="btn btn-primary btn-sm" onClick={openCreate}>+ Nouvelle période</button>
       </div>
 
       {msg && <div className={msg.type === 'success' ? 'alert-success' : 'alert-error'}>{msg.text}</div>}

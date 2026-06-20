@@ -8,16 +8,16 @@ import { useAuth } from '../context/AuthContext.jsx';
 
 // Navigation items. Items with `to` are live; others are placeholders.
 const MENU = [
-  { ico: '⚙️', label: "Configuration de l'école", to: '/admin/configuration' },
-  { ico: '🏫', label: 'Classes', to: '/admin/classes' },
-  { ico: '📚', label: 'Matières', to: '/admin/matieres' },
-  { ico: '👩‍🏫', label: 'Enseignants', to: '/admin/enseignants' },
-  { ico: '🗓️', label: 'Périodes', to: '/admin/periodes' },
-  { ico: '👨‍🎓', label: 'Élèves', ready: false },
-  { ico: '📝', label: 'Notes', ready: false },
-  { ico: '✅', label: 'Présences', ready: false },
-  { ico: '📄', label: 'Bulletins', ready: false },
-  { ico: '📊', label: 'Rapports', ready: false },
+  { label: "Configuration de l'école", to: '/admin/configuration' },
+  { label: 'Classes', to: '/admin/classes' },
+  { label: 'Matières', to: '/admin/matieres' },
+  { label: 'Enseignants', to: '/admin/enseignants' },
+  { label: 'Périodes', to: '/admin/periodes' },
+  { label: 'Élèves', ready: false },
+  { label: 'Notes', ready: false },
+  { label: 'Présences', ready: false },
+  { label: 'Bulletins', ready: false },
+  { label: 'Rapports', ready: false },
 ];
 
 export default function AdminDashboard() {
@@ -77,7 +77,7 @@ export default function AdminDashboard() {
   return (
     <Layout ecoleNom={ecole?.nom_ecole}>
       <div className="welcome">
-        <h1>Bonjour, {user?.nom} 👋</h1>
+        <h1>Bonjour, {user?.nom}</h1>
         <p>
           {ecole ? ecole.nom_ecole : 'École non configurée'}
           {ecole?.annee_scolaire ? ` — Année scolaire ${ecole.annee_scolaire}` : ''}
@@ -106,7 +106,7 @@ export default function AdminDashboard() {
 
           {!ecole && (
             <div className="alert-error" style={{ marginBottom: 24 }}>
-              ⚠️ Aucune école configurée. La configuration sera disponible en Phase 2.
+              Aucune école configurée. Renseignez-la dans « Configuration de l'école ».
             </div>
           )}
 
@@ -115,12 +115,10 @@ export default function AdminDashboard() {
             {MENU.map((m) =>
               m.to ? (
                 <Link className="nav-tile" key={m.label} to={m.to} style={{ textDecoration: 'none' }}>
-                  <span className="ico">{m.ico}</span>
                   {m.label}
                 </Link>
               ) : (
                 <div className="nav-tile" key={m.label}>
-                  <span className="ico">{m.ico}</span>
                   {m.label}
                   <span className="soon">Bientôt disponible</span>
                 </div>
