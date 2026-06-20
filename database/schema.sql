@@ -74,6 +74,7 @@ CREATE TABLE IF NOT EXISTS eleves (
     date_naissance  DATE,
     lieu_naissance  VARCHAR(120),
     numero_perm     VARCHAR(50) NOT NULL,
+    ecole_provenance VARCHAR(200),                      -- école d'origine (élève transféré)
     classe_id       UUID REFERENCES classes(id) ON DELETE SET NULL,
     annee_scolaire  VARCHAR(20) NOT NULL,
     actif           BOOLEAN NOT NULL DEFAULT TRUE,

@@ -100,6 +100,7 @@ export default function EleveProfile() {
               <Info label="Classe" value={eleve.classes?.nom || '—'} />
               <Info label="Niveau" value={eleve.classes?.niveaux?.nom || '—'} />
               <Info label="Année scolaire" value={eleve.annee_scolaire} />
+              <Info label="École de provenance" value={eleve.ecole_provenance || '—'} />
             </div>
           </div>
 

@@ -16,6 +16,7 @@ const EMPTY = {
   date_naissance: '',
   lieu_naissance: '',
   numero_perm: '',
+  ecole_provenance: '',
   classe_id: '',
   annee_scolaire: '',
 };
@@ -91,6 +92,7 @@ export default function Eleves() {
         date_naissance: e.date_naissance || '',
         lieu_naissance: e.lieu_naissance || '',
         numero_perm: e.numero_perm,
+        ecole_provenance: e.ecole_provenance || '',
         classe_id: e.classe_id || '',
         annee_scolaire: e.annee_scolaire,
       },
@@ -112,6 +114,7 @@ export default function Eleves() {
       sexe: f.sexe || null,
       date_naissance: f.date_naissance || null,
       lieu_naissance: f.lieu_naissance.trim() || null,
+      ecole_provenance: f.ecole_provenance.trim() || null,
       classe_id: f.classe_id,
       annee_scolaire: f.annee_scolaire.trim(),
     };
@@ -159,8 +162,8 @@ export default function Eleves() {
   }
 
   function downloadTemplate() {
-    const header = 'nom,postnom,prenom,sexe,date_naissance,lieu_naissance,numero_perm,classe,annee_scolaire';
-    const example = `Mukendi,Kabongo,Grace,F,2015-04-12,Bukavu,PERM-001,1ère A,${ecole?.annee_scolaire || '2025-2026'}`;
+    const header = 'nom,postnom,prenom,sexe,date_naissance,lieu_naissance,numero_perm,ecole_provenance,classe,annee_scolaire';
+    const example = `Mukendi,Kabongo,Grace,F,2015-04-12,Bukavu,PERM-001,,1ère A,${ecole?.annee_scolaire || '2025-2026'}`;
     downloadCSV('modele_eleves.csv', header + '\n' + example + '\n');
   }
 
@@ -318,6 +321,10 @@ function EnrollModal({ modal, setModal, classes, saving, onSave, error }) {
           <input className="input" placeholder="Laisser vide = provisoire généré" value={f.numero_perm} onChange={(e) => set('numero_perm', e.target.value)} />
         </div>
         <div>
+          <label className="lbl">École de provenance</label>
+          <input className="input" placeholder="Si l'élève vient d'une autre école" value={f.ecole_provenance} onChange={(e) => set('ecole_provenance', e.target.value)} />
+        </div>
+        <div>
           <label className="lbl">Classe <span className="req">*</span></label>
           <select className="input" value={f.classe_id} onChange={(e) => set('classe_id', e.target.value)}>
             <option value="">— Choisir —</option>
@@ -385,6 +392,7 @@ function ImportModal({ classes, defaultAnnee, onClose, onDone }) {
         lieu_naissance: r.lieu_naissance || null,
         // N° PERM optional: generate a provisional one when missing.
         numero_perm: r.numero_perm || provisionalPerm(annee),
+        ecole_provenance: r.ecole_provenance || null,
         classe_id: classeId,
         annee_scolaire: annee,
       };
@@ -418,7 +426,7 @@ function ImportModal({ classes, defaultAnnee, onClose, onDone }) {
     >
       {error && <div className="alert-error">{error}</div>}
       <p className="admin-sub" style={{ marginTop: 0 }}>
-        Colonnes attendues : <code>nom, postnom, prenom, sexe, date_naissance, lieu_naissance, numero_perm, classe, annee_scolaire</code>.
+        Colonnes attendues : <code>nom, postnom, prenom, sexe, date_naissance, lieu_naissance, numero_perm, ecole_provenance, classe, annee_scolaire</code>.
         La colonne « classe » doit correspondre au nom exact d'une classe existante.
         Le <code>numero_perm</code> est <strong>optionnel</strong> : laissé vide, un numéro provisoire est généré.
       </p>
