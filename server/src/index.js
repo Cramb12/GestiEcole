@@ -15,7 +15,10 @@ const app = express();
 app.use(cors({ origin: process.env.CLIENT_URL || '*' }));
 app.use(express.json());
 
-// Health check.
+// Root + health check (so the base URL doesn't look broken on Render).
+app.get('/', (req, res) => {
+  res.json({ service: 'GestiEcole API', status: 'ok', docs: '/api/health' });
+});
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'API en ligne' });
 });

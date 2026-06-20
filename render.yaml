@@ -1,0 +1,22 @@
+# Blueprint Render pour le backend Express (/server).
+# Render > New > Blueprint > connectez le dépôt GitHub > il lit ce fichier.
+# Renseignez ensuite DATABASE_URL et CLIENT_URL (marqués sync:false).
+services:
+  - type: web
+    name: gestiecole-api
+    runtime: node
+    rootDir: server
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        sync: false          # collez votre chaîne de connexion Supabase
+      - key: CLIENT_URL
+        sync: false          # collez l'URL Vercel du frontend (https://...)
+      - key: DB_SSL
+        value: "true"
+      - key: JWT_EXPIRES_IN
+        value: "7d"
+      - key: JWT_SECRET
+        generateValue: true  # Render génère un secret aléatoire automatiquement
