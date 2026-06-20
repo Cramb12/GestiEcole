@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase.js';
 import { useEcole } from '../../lib/useEcole.js';
+import { isProvisional } from '../../lib/perm.js';
 import AdminLayout from '../../components/AdminLayout.jsx';
 import Modal from '../../components/Modal.jsx';
 
@@ -83,7 +84,8 @@ export default function EleveProfile() {
                 <h2 style={{ fontSize: 22, marginBottom: 4 }}>{fullName}</h2>
                 <div className="admin-sub" style={{ margin: 0 }}>
                   N° PERM : <strong>{eleve.numero_perm}</strong>
-                  {!eleve.actif && <span className="pill pill-red" style={{ marginLeft: 10 }}>Inactif</span>}
+                  {isProvisional(eleve.numero_perm) && <span className="pill pill-gray" style={{ marginLeft: 8 }}>provisoire</span>}
+                  {!eleve.actif && <span className="pill pill-red" style={{ marginLeft: 8 }}>Inactif</span>}
                 </div>
               </div>
               <button className="btn btn-primary btn-sm" onClick={() => { setMsg(null); setPromo({ decision: '', classe_id: '' }); }}>

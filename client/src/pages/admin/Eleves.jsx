@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase.js';
 import { useEcole } from '../../lib/useEcole.js';
 import { parseCSV, downloadCSV } from '../../lib/csv.js';
+import { provisionalPerm } from '../../lib/perm.js';
 import AdminLayout from '../../components/AdminLayout.jsx';
 import Modal from '../../components/Modal.jsx';
 
@@ -98,36 +99,53 @@ export default function Eleves() {
 
   async function save() {
     const f = modal.form;
-    if (!f.nom.trim() || !f.numero_perm.trim() || !f.classe_id || !f.annee_scolaire.trim()) {
-      setMsg({ type: 'error', text: 'Nom, N° PERM, classe et année scolaire sont obligatoires.' });
+    if (!f.nom.trim() || !f.classe_id || !f.annee_scolaire.trim()) {
+      setMsg({ type: 'error', text: 'Nom, classe et année scolaire sont obligatoires.' });
       return;
     }
     setSaving(true);
-    const payload = {
+
+    const base = {
       nom: f.nom.trim(),
       postnom: f.postnom.trim() || null,
       prenom: f.prenom.trim() || null,
       sexe: f.sexe || null,
       date_naissance: f.date_naissance || null,
       lieu_naissance: f.lieu_naissance.trim() || null,
-      numero_perm: f.numero_perm.trim(),
       classe_id: f.classe_id,
       annee_scolaire: f.annee_scolaire.trim(),
     };
-    let res;
-    if (modal.edit) res = await supabase.from('eleves').update(payload).eq('id', modal.edit);
-    else res = await supabase.from('eleves').insert(payload);
-    setSaving(false);
-    if (res.error) {
-      const m = res.error.message.includes('uq_eleve_perm_annee')
-        ? `Le N° PERM « ${f.numero_perm} » existe déjà pour cette année.`
-        : res.error.message;
-      setMsg({ type: 'error', text: m });
+
+    // N° PERM optional: if empty, auto-generate a unique provisional one.
+    const typed = f.numero_perm.trim();
+    const generated = !typed;
+
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const perm = generated ? provisionalPerm(base.annee_scolaire) : typed;
+      const payload = { ...base, numero_perm: perm };
+      const res = modal.edit
+        ? await supabase.from('eleves').update(payload).eq('id', modal.edit)
+        : await supabase.from('eleves').insert(payload);
+
+      if (!res.error) {
+        setSaving(false);
+        setModal(null);
+        setMsg({ type: 'success', text: 'Élève enregistré.' });
+        load();
+        return;
+      }
+      const dup = res.error.message.includes('uq_eleve_perm_annee');
+      // A generated collision is extremely rare — just retry with a new id.
+      if (dup && generated) continue;
+      setSaving(false);
+      setMsg({
+        type: 'error',
+        text: dup ? `Le N° PERM « ${typed} » existe déjà pour cette année.` : res.error.message,
+      });
       return;
     }
-    setModal(null);
-    setMsg({ type: 'success', text: 'Élève enregistré.' });
-    load();
+    setSaving(false);
+    setMsg({ type: 'error', text: 'Impossible de générer un N° PERM unique. Réessayez.' });
   }
 
   async function remove(e) {
@@ -296,8 +314,8 @@ function EnrollModal({ modal, setModal, classes, saving, onSave, error }) {
           <input className="input" value={f.lieu_naissance} onChange={(e) => set('lieu_naissance', e.target.value)} />
         </div>
         <div>
-          <label className="lbl">N° PERM <span className="req">*</span></label>
-          <input className="input" value={f.numero_perm} onChange={(e) => set('numero_perm', e.target.value)} />
+          <label className="lbl">N° PERM (SERNIE)</label>
+          <input className="input" placeholder="Laisser vide = provisoire généré" value={f.numero_perm} onChange={(e) => set('numero_perm', e.target.value)} />
         </div>
         <div>
           <label className="lbl">Classe <span className="req">*</span></label>
@@ -348,8 +366,8 @@ function ImportModal({ classes, defaultAnnee, onClose, onDone }) {
     for (let i = 0; i < rows.length; i++) {
       const r = rows[i];
       const ligne = i + 2; // +1 header +1 1-based
-      if (!r.nom || !r.numero_perm || !r.classe) {
-        errors.push(`Ligne ${ligne}: nom, numero_perm et classe sont requis.`);
+      if (!r.nom || !r.classe) {
+        errors.push(`Ligne ${ligne}: nom et classe sont requis.`);
         continue;
       }
       const classeId = byName[String(r.classe).toLowerCase().trim()];
@@ -357,6 +375,7 @@ function ImportModal({ classes, defaultAnnee, onClose, onDone }) {
         errors.push(`Ligne ${ligne}: classe « ${r.classe} » introuvable.`);
         continue;
       }
+      const annee = r.annee_scolaire || defaultAnnee;
       const payload = {
         nom: r.nom,
         postnom: r.postnom || null,
@@ -364,9 +383,10 @@ function ImportModal({ classes, defaultAnnee, onClose, onDone }) {
         sexe: r.sexe === 'M' || r.sexe === 'F' ? r.sexe : null,
         date_naissance: r.date_naissance || null,
         lieu_naissance: r.lieu_naissance || null,
-        numero_perm: r.numero_perm,
+        // N° PERM optional: generate a provisional one when missing.
+        numero_perm: r.numero_perm || provisionalPerm(annee),
         classe_id: classeId,
-        annee_scolaire: r.annee_scolaire || defaultAnnee,
+        annee_scolaire: annee,
       };
       const { error } = await supabase.from('eleves').insert(payload);
       if (error) {
@@ -400,6 +420,7 @@ function ImportModal({ classes, defaultAnnee, onClose, onDone }) {
       <p className="admin-sub" style={{ marginTop: 0 }}>
         Colonnes attendues : <code>nom, postnom, prenom, sexe, date_naissance, lieu_naissance, numero_perm, classe, annee_scolaire</code>.
         La colonne « classe » doit correspondre au nom exact d'une classe existante.
+        Le <code>numero_perm</code> est <strong>optionnel</strong> : laissé vide, un numéro provisoire est généré.
       </p>
       <input type="file" accept=".csv,text/csv" onChange={handleFile} />
       {rows && !error && (
