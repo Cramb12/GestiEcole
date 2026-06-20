@@ -12,6 +12,7 @@ const LINKS = [
   { to: '/admin/eleves', label: 'Élèves' },
   { to: '/admin/presences', label: 'Présences' },
   { to: '/admin/notes', label: 'Notes' },
+  { to: '/admin/bulletins', label: 'Bulletins' },
   { to: '/admin/periodes', label: 'Périodes' },
 ];
 

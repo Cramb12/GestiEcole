@@ -383,3 +383,61 @@ table.data tr:hover td { background: #fafbfc; }
 .cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: var(--gris-fond); font-size: 13px; }
 .cal-day.has { background: var(--bleu); color: #fff; font-weight: 700; }
 .cal-day.blank { background: transparent; }
+
+/* ============================================================
+   PHASE 6 — Bulletins (A4 paysage, imprimable)
+   ============================================================ */
+.bulletin {
+  position: relative;
+  background: #fff;
+  color: #000;
+  width: 277mm;            /* A4 landscape usable width */
+  max-width: 100%;
+  margin: 0 auto 18px;
+  padding: 8mm 9mm;
+  border: 1px solid #999;
+  font-family: 'Times New Roman', Georgia, serif;
+  font-size: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.12);
+}
+.bulletin .b-watermark {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 90px; font-weight: 800; color: rgba(206,17,38,.10);
+  transform: rotate(-25deg); pointer-events: none; letter-spacing: 6px; z-index: 0;
+}
+.bulletin > * { position: relative; z-index: 1; }
+
+.b-head { text-align: center; line-height: 1.25; }
+.b-head .b-pays { font-weight: 700; font-size: 11px; }
+.b-head .b-min { font-size: 10px; }
+.b-meta { display: flex; justify-content: space-between; gap: 14px; margin: 8px 0; font-size: 10px; }
+.b-meta .b-box { flex: 1; border: 1px solid #000; padding: 4px 8px; }
+.b-meta .b-box div { padding: 1px 0; }
+.b-title { text-align: center; font-weight: 700; font-size: 12px; border: 2px solid #000; padding: 3px; margin: 6px 0; text-transform: uppercase; }
+
+table.b-grid { width: 100%; border-collapse: collapse; font-size: 9.2px; }
+table.b-grid th, table.b-grid td { border: 1px solid #000; padding: 1.5px 3px; text-align: center; }
+table.b-grid th { background: #eee; font-weight: 700; }
+table.b-grid td.b-branche { text-align: left; }
+table.b-grid tr.b-domaine td { background: #ddd; font-weight: 700; text-align: left; text-transform: uppercase; }
+table.b-grid tr.b-sous td { background: #f3f3f3; font-weight: 700; }
+table.b-grid tr.b-gen td { background: #e8e8e8; font-weight: 700; }
+
+.b-foot { display: flex; gap: 12px; margin-top: 8px; font-size: 10px; }
+.b-foot .b-col { flex: 1; }
+.b-foot table { width: 100%; border-collapse: collapse; }
+.b-foot table td { border: 1px solid #000; padding: 2px 6px; }
+.b-foot .b-sign { border: 1px solid #000; height: 48px; padding: 3px 6px; }
+.b-deliber { margin-top: 6px; font-weight: 700; }
+
+/* Toolbar shown on screen, hidden when printing */
+.bulletin-actions { margin: 0 0 14px; display: flex; gap: 10px; flex-wrap: wrap; }
+
+@media print {
+  body * { visibility: hidden; }
+  #print-root, #print-root * { visibility: visible; }
+  #print-root { position: absolute; left: 0; top: 0; width: 100%; }
+  .bulletin { box-shadow: none; border: none; margin: 0; page-break-after: always; }
+  .bulletin:last-child { page-break-after: auto; }
+  @page { size: A4 landscape; margin: 6mm; }
+}
