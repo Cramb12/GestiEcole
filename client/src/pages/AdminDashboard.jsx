@@ -11,6 +11,7 @@ const MENU = [
   { label: "Configuration de l'école", to: '/admin/configuration' },
   { label: 'Classes', to: '/admin/classes' },
   { label: 'Matières', to: '/admin/matieres' },
+  { label: 'Sections', to: '/admin/sections' },
   { label: 'Enseignants', to: '/admin/enseignants' },
   { label: 'Périodes', to: '/admin/periodes' },
   { label: 'Élèves', to: '/admin/eleves' },

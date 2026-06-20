@@ -35,6 +35,20 @@ export function defaultBranches(niveauType) {
   return niveauType === 'secondaire' ? BRANCHES_SECONDAIRE : BRANCHES_PRIMAIRE;
 }
 
+// --- Sections d'humanités (liste standard, à ajuster selon le document officiel) ---
+export const DEFAULT_SECTIONS = [
+  { nom: 'Scientifique', code: 'SCI' },
+  { nom: 'Littéraire', code: 'LIT' },
+  { nom: 'Commerciale et Gestion', code: 'CG' },
+  { nom: 'Pédagogique', code: 'PED' },
+  { nom: 'Coupe et Couture', code: 'CC' },
+  { nom: 'Électricité', code: 'ELE' },
+  { nom: 'Mécanique', code: 'MEC' },
+  { nom: 'Construction', code: 'CONS' },
+  { nom: 'Agricole', code: 'AGR' },
+  { nom: 'Hôtellerie', code: 'HOT' },
+];
+
 // --- Periods (periodes) by system -------------------------------------
 export function defaultPeriodes(systeme) {
   if (systeme === 'semestre') {

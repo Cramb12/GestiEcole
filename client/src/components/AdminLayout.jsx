@@ -7,6 +7,7 @@ const LINKS = [
   { to: '/admin/configuration', label: 'École' },
   { to: '/admin/classes', label: 'Classes' },
   { to: '/admin/matieres', label: 'Matières' },
+  { to: '/admin/sections', label: 'Sections' },
   { to: '/admin/enseignants', label: 'Enseignants' },
   { to: '/admin/eleves', label: 'Élèves' },
   { to: '/admin/periodes', label: 'Périodes' },

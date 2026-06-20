@@ -51,12 +51,23 @@ CREATE TABLE IF NOT EXISTS niveaux (
 );
 
 -- =====================================================================
+-- 3b. SECTIONS (pour les humanités ; assignées aux classes)
+-- =====================================================================
+CREATE TABLE IF NOT EXISTS sections (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    nom         VARCHAR(120) NOT NULL,
+    code        VARCHAR(30),
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- =====================================================================
 -- 4. CLASSES
 -- =====================================================================
 CREATE TABLE IF NOT EXISTS classes (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     nom             VARCHAR(50) NOT NULL,
     niveau_id       UUID NOT NULL REFERENCES niveaux(id) ON DELETE RESTRICT,
+    section_id      UUID REFERENCES sections(id) ON DELETE SET NULL,
     annee_scolaire  VARCHAR(20) NOT NULL,
     titulaire_id    UUID REFERENCES profiles(id) ON DELETE SET NULL,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -233,6 +244,7 @@ $$;
 ALTER TABLE profiles            ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ecole               ENABLE ROW LEVEL SECURITY;
 ALTER TABLE niveaux             ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sections            ENABLE ROW LEVEL SECURITY;
 ALTER TABLE classes             ENABLE ROW LEVEL SECURITY;
 ALTER TABLE eleves              ENABLE ROW LEVEL SECURITY;
 ALTER TABLE branches            ENABLE ROW LEVEL SECURITY;
@@ -256,7 +268,7 @@ CREATE POLICY p_profiles_write ON profiles FOR ALL TO authenticated
 DO $$
 DECLARE t TEXT;
 BEGIN
-  FOREACH t IN ARRAY ARRAY['ecole','niveaux','classes','branches','periodes'] LOOP
+  FOREACH t IN ARRAY ARRAY['ecole','niveaux','sections','classes','branches','periodes'] LOOP
     EXECUTE format('DROP POLICY IF EXISTS p_%1$s_select ON %1$s', t);
     EXECUTE format('CREATE POLICY p_%1$s_select ON %1$s FOR SELECT TO authenticated USING (true)', t);
     EXECUTE format('DROP POLICY IF EXISTS p_%1$s_write ON %1$s', t);

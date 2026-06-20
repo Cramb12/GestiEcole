@@ -9,6 +9,7 @@ export default function Classes() {
   const { ecole } = useEcole();
   const [classes, setClasses] = useState([]);
   const [niveaux, setNiveaux] = useState([]);
+  const [sections, setSections] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [counts, setCounts] = useState({}); // classe_id -> nb élèves
   const [loading, setLoading] = useState(true);
@@ -19,14 +20,16 @@ export default function Classes() {
 
   async function load() {
     setLoading(true);
-    const [cl, nv, tc, el] = await Promise.all([
-      supabase.from('classes').select('id, nom, annee_scolaire, niveau_id, titulaire_id, niveaux(nom), profiles(nom, postnom)').order('nom'),
-      supabase.from('niveaux').select('id, nom, type').order('nom'),
+    const [cl, nv, sec, tc, el] = await Promise.all([
+      supabase.from('classes').select('id, nom, annee_scolaire, niveau_id, titulaire_id, section_id, niveaux(nom, bulletin_template), profiles(nom, postnom), sections(nom)').order('nom'),
+      supabase.from('niveaux').select('id, nom, type, bulletin_template').order('nom'),
+      supabase.from('sections').select('id, nom').order('nom'),
       supabase.from('profiles').select('id, nom, postnom').eq('role', 'teacher').order('nom'),
       supabase.from('eleves').select('classe_id'),
     ]);
     setClasses(cl.data || []);
     setNiveaux(nv.data || []);
+    setSections(sec.data || []);
     setTeachers(tc.data || []);
     const c = {};
     (el.data || []).forEach((e) => {
@@ -44,7 +47,7 @@ export default function Classes() {
     setMsg(null);
     setModal({
       edit: null,
-      form: { nom: '', niveau_id: '', titulaire_id: '', annee_scolaire: ecole?.annee_scolaire || '' },
+      form: { nom: '', niveau_id: '', titulaire_id: '', section_id: '', annee_scolaire: ecole?.annee_scolaire || '' },
     });
   }
   function openEdit(c) {
@@ -55,6 +58,7 @@ export default function Classes() {
         nom: c.nom,
         niveau_id: c.niveau_id,
         titulaire_id: c.titulaire_id || '',
+        section_id: c.section_id || '',
         annee_scolaire: c.annee_scolaire,
       },
     });
@@ -66,11 +70,16 @@ export default function Classes() {
       setMsg({ type: 'error', text: 'Nom, niveau et année scolaire sont obligatoires.' });
       return;
     }
+    // Section only applies to Humanités classes.
+    const niveau = niveaux.find((n) => n.id === f.niveau_id);
+    const isHumanites = niveau?.bulletin_template === 'humanites';
+
     setSaving(true);
     const payload = {
       nom: f.nom.trim(),
       niveau_id: f.niveau_id,
       titulaire_id: f.titulaire_id || null,
+      section_id: isHumanites ? f.section_id || null : null,
       annee_scolaire: f.annee_scolaire.trim(),
     };
     let res;
@@ -123,6 +132,7 @@ export default function Classes() {
               <tr>
                 <th>Classe</th>
                 <th>Niveau</th>
+                <th>Section</th>
                 <th>Titulaire</th>
                 <th>Élèves</th>
                 <th>Année</th>
@@ -134,6 +144,7 @@ export default function Classes() {
                 <tr key={c.id}>
                   <td><strong>{c.nom}</strong></td>
                   <td><span className="pill pill-blue">{c.niveaux?.nom || '—'}</span></td>
+                  <td>{c.sections ? <span className="pill pill-green">{c.sections.nom}</span> : <span className="admin-sub" style={{ margin: 0 }}>—</span>}</td>
                   <td>{c.profiles ? `${c.profiles.nom} ${c.profiles.postnom || ''}` : <span className="admin-sub" style={{ margin: 0 }}>Non assigné</span>}</td>
                   <td>{counts[c.id] || 0}</td>
                   <td>{c.annee_scolaire}</td>
@@ -174,6 +185,19 @@ export default function Classes() {
                 {niveaux.map((n) => <option key={n.id} value={n.id}>{n.nom}</option>)}
               </select>
             </div>
+            {niveaux.find((n) => n.id === modal.form.niveau_id)?.bulletin_template === 'humanites' && (
+              <div>
+                <label className="lbl">Section (humanités)</label>
+                {sections.length === 0 ? (
+                  <div className="admin-sub" style={{ margin: 0 }}>Aucune section. Créez-en dans « Sections ».</div>
+                ) : (
+                  <select className="input" value={modal.form.section_id} onChange={(e) => setModal({ ...modal, form: { ...modal.form, section_id: e.target.value } })}>
+                    <option value="">— Choisir —</option>
+                    {sections.map((s) => <option key={s.id} value={s.id}>{s.nom}</option>)}
+                  </select>
+                )}
+              </div>
+            )}
             <div>
               <label className="lbl">Titulaire</label>
               <select className="input" value={modal.form.titulaire_id} onChange={(e) => setModal({ ...modal, form: { ...modal.form, titulaire_id: e.target.value } })}>

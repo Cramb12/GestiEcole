@@ -26,7 +26,7 @@ export default function EleveProfile() {
     setLoading(true);
     const { data: el, error: e1 } = await supabase
       .from('eleves')
-      .select('*, classes(nom, niveau_id, niveaux(nom))')
+      .select('*, classes(nom, niveau_id, niveaux(nom), sections(nom))')
       .eq('id', id)
       .maybeSingle();
     if (e1 || !el) {
@@ -99,6 +99,7 @@ export default function EleveProfile() {
               <Info label="Lieu de naissance" value={eleve.lieu_naissance || '—'} />
               <Info label="Classe" value={eleve.classes?.nom || '—'} />
               <Info label="Niveau" value={eleve.classes?.niveaux?.nom || '—'} />
+              <Info label="Section" value={eleve.classes?.sections?.nom || '—'} />
               <Info label="Année scolaire" value={eleve.annee_scolaire} />
               <Info label="École de provenance" value={eleve.ecole_provenance || '—'} />
             </div>

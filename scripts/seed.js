@@ -80,7 +80,7 @@ async function seed() {
     ['Élémentaire', 'primaire', 'trimestre', 'elementaire'],
     ['Moyen', 'primaire', 'trimestre', 'moyen'],
     ['Terminal', 'primaire', 'trimestre', 'terminal'],
-    ['7ème CTEB', 'secondaire', 'semestre', 'cteb'],
+    ["Cycle d'Orientation", 'secondaire', 'semestre', 'cteb'],
     ['Humanités', 'secondaire', 'semestre', 'humanites'],
   ];
   const niveauIds = {};

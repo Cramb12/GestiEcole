@@ -47,7 +47,7 @@ export default function Eleves() {
         .from('eleves')
         .select('id, nom, postnom, prenom, sexe, date_naissance, lieu_naissance, numero_perm, classe_id, annee_scolaire, actif, classes(nom, niveau_id, niveaux(nom))')
         .order('nom'),
-      supabase.from('classes').select('id, nom, niveau_id, niveaux(nom)').order('nom'),
+      supabase.from('classes').select('id, nom, niveau_id, niveaux(nom), sections(nom)').order('nom'),
       supabase.from('niveaux').select('id, nom').order('nom'),
     ]);
     setEleves(el.data || []);
@@ -328,7 +328,7 @@ function EnrollModal({ modal, setModal, classes, saving, onSave, error }) {
           <label className="lbl">Classe <span className="req">*</span></label>
           <select className="input" value={f.classe_id} onChange={(e) => set('classe_id', e.target.value)}>
             <option value="">— Choisir —</option>
-            {classes.map((c) => <option key={c.id} value={c.id}>{c.nom} ({c.niveaux?.nom})</option>)}
+            {classes.map((c) => <option key={c.id} value={c.id}>{c.nom} ({c.niveaux?.nom}{c.sections ? ' - ' + c.sections.nom : ''})</option>)}
           </select>
         </div>
         <div>
