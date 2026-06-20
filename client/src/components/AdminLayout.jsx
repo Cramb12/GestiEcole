@@ -10,6 +10,7 @@ const LINKS = [
   { to: '/admin/sections', label: 'Sections' },
   { to: '/admin/enseignants', label: 'Enseignants' },
   { to: '/admin/eleves', label: 'Élèves' },
+  { to: '/admin/presences', label: 'Présences' },
   { to: '/admin/periodes', label: 'Périodes' },
 ];
 

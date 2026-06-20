@@ -1,11 +1,16 @@
 // Teacher dashboard — assigned classes + subjects, read from Supabase.
 // RLS ensures a teacher only sees their own assignments.
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase.js';
 import Layout from '../components/Layout.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 
-const QUICK = ['Présences', 'Notes', 'Bulletins'];
+const QUICK = [
+  { label: 'Présences', to: '/enseignant/presences' },
+  { label: 'Notes' },
+  { label: 'Bulletins' },
+];
 
 export default function TeacherDashboard() {
   const { user } = useAuth();
@@ -111,12 +116,18 @@ export default function TeacherDashboard() {
 
           <div className="section-title" style={{ marginTop: 28 }}>Accès rapide</div>
           <div className="nav-grid">
-            {QUICK.map((label) => (
-              <div className="nav-tile" key={label}>
-                {label}
-                <span className="soon">Bientôt disponible</span>
-              </div>
-            ))}
+            {QUICK.map((q) =>
+              q.to ? (
+                <Link className="nav-tile" key={q.label} to={q.to} style={{ textDecoration: 'none' }}>
+                  {q.label}
+                </Link>
+              ) : (
+                <div className="nav-tile" key={q.label}>
+                  {q.label}
+                  <span className="soon">Bientôt disponible</span>
+                </div>
+              )
+            )}
           </div>
         </>
       )}

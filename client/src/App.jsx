@@ -13,6 +13,8 @@ import Periodes from './pages/admin/Periodes.jsx';
 import Eleves from './pages/admin/Eleves.jsx';
 import EleveProfile from './pages/admin/EleveProfile.jsx';
 import Sections from './pages/admin/Sections.jsx';
+import AdminPresences from './pages/admin/Presences.jsx';
+import TeacherPresences from './pages/teacher/Presences.jsx';
 
 // Sends a logged-in user to the correct home, or to /login otherwise.
 function Home() {
@@ -42,6 +44,7 @@ export default function App() {
       <Route path="/admin/enseignants" element={<Admin><Enseignants /></Admin>} />
       <Route path="/admin/eleves" element={<Admin><Eleves /></Admin>} />
       <Route path="/admin/eleves/:id" element={<Admin><EleveProfile /></Admin>} />
+      <Route path="/admin/presences" element={<Admin><AdminPresences /></Admin>} />
       <Route path="/admin/periodes" element={<Admin><Periodes /></Admin>} />
 
       {/* Teacher */}
@@ -50,6 +53,14 @@ export default function App() {
         element={
           <ProtectedRoute role="teacher">
             <TeacherDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/enseignant/presences"
+        element={
+          <ProtectedRoute role="teacher">
+            <TeacherPresences />
           </ProtectedRoute>
         }
       />

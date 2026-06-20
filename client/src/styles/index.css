@@ -358,3 +358,28 @@ table.data tr:hover td { background: #fafbfc; }
   .admin-side { position: static; flex-direction: row; flex-wrap: wrap; }
   .side-link { flex: 1; justify-content: center; }
 }
+
+/* ============================================================
+   PHASE 4 — Présences (appel + calendrier)
+   ============================================================ */
+.att-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.att-btn {
+  padding: 6px 12px; border-radius: 8px; border: 1px solid var(--gris-bord);
+  background: #fff; font-size: 13px; font-weight: 600; color: var(--texte-clair);
+}
+.att-btn:disabled { cursor: default; opacity: 1; }
+.att-btn.active.present { background: #e4f6ea; color: #1c7c43; border-color: #9fd9b4; }
+.att-btn.active.absent { background: #fde8ea; color: var(--rouge); border-color: #f3b2bb; }
+.att-btn.active.retard { background: #fff5d6; color: #9a6b00; border-color: #f0d27a; }
+.note-input { margin-top: 6px; width: 100%; max-width: 320px; padding: 6px 10px; border: 1px solid var(--gris-bord); border-radius: 8px; font-size: 13px; }
+
+.locked-banner {
+  background: #eef6fc; border: 1px solid #bcdcf3; color: var(--bleu-fonce);
+  padding: 10px 14px; border-radius: var(--radius); font-size: 14px; margin-bottom: 14px;
+}
+
+.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; max-width: 360px; }
+.cal-h { text-align: center; font-size: 11px; color: var(--texte-clair); font-weight: 700; padding-bottom: 2px; }
+.cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: var(--gris-fond); font-size: 13px; }
+.cal-day.has { background: var(--bleu); color: #fff; font-weight: 700; }
+.cal-day.blank { background: transparent; }

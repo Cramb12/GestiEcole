@@ -15,8 +15,8 @@ const MENU = [
   { label: 'Enseignants', to: '/admin/enseignants' },
   { label: 'Périodes', to: '/admin/periodes' },
   { label: 'Élèves', to: '/admin/eleves' },
+  { label: 'Présences', to: '/admin/presences' },
   { label: 'Notes', ready: false },
-  { label: 'Présences', ready: false },
   { label: 'Bulletins', ready: false },
   { label: 'Rapports', ready: false },
 ];
