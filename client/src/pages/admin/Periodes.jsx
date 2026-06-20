@@ -147,9 +147,10 @@ export default function Periodes() {
       {msg && <div className={msg.type === 'success' ? 'alert-success' : 'alert-error'}>{msg.text}</div>}
 
       <div className="locked-banner">
-        Structure officielle : au <strong>primaire</strong>, 3 trimestres de <strong>2 périodes</strong> chacun (6 périodes) ;
-        au <strong>secondaire</strong>, 2 semestres de <strong>2 périodes</strong> chacun (4 périodes). Chaque trimestre/semestre
-        comporte 2 périodes de <strong>Travaux Journaliers</strong> + 1 <strong>Examen</strong> (la saisie des notes suivra cette structure en Phase 5).
+        Structure officielle : chaque trimestre/semestre = <strong>2 périodes de Travaux Journaliers</strong> + <strong>1 Examen</strong>.
+        Au <strong>primaire</strong> : 3 trimestres (6 périodes) et <strong>3 examens</strong> (un par trimestre).
+        Au <strong>secondaire</strong> : 2 semestres (4 périodes), <strong>2 examens</strong> (un par semestre) + un <strong>Examen de Repêchage</strong> de fin d'année.
+        La saisie des notes (Phase 5) suivra exactement cette structure.
       </div>
 
       {loading ? (
