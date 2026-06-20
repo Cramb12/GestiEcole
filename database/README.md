@@ -11,7 +11,7 @@ Ce dossier contient le schéma complet de la base de données PostgreSQL.
 
 | Table | Rôle |
 |-------|------|
-| `users` | Comptes (super_admin / teacher) |
+| `profiles` | Profil applicatif lié à un compte **Supabase Auth** (rôle super_admin / teacher) |
 | `ecole` | Informations de l'école (un seul enregistrement) |
 | `niveaux` | Niveaux scolaires (Élémentaire, Moyen, ... Humanités) |
 | `classes` | Classes (ex: "1ère A") |
@@ -32,3 +32,11 @@ Ce dossier contient le schéma complet de la base de données PostgreSQL.
 
 Les tables utilisent `ON DELETE` adaptés et des index sur les colonnes les plus
 fréquemment interrogées (`eleve_id`, `classe_id`, `periode_id`).
+
+## Sécurité (RLS)
+
+`schema.sql` active la **Row Level Security** sur toutes les tables et crée les
+politiques d'accès : l'administrateur voit tout ; un enseignant ne voit que ses
+classes, ses élèves et ses affectations. La clé `service_role` (utilisée par le
+script de seed) contourne la RLS — à n'utiliser que côté serveur/local, jamais
+dans le frontend.

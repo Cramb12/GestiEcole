@@ -4,29 +4,31 @@ Application complète de gestion scolaire pour les écoles de la République Dé
 
 > **Langue de l'interface : Français** · Monnaie : Franc Congolais (FC)
 
-## Stack technique
+## Architecture (Supabase-only)
 
 | Couche | Technologie |
 |--------|-------------|
-| Frontend | React (Vite) |
-| Backend | Node.js + Express |
-| Base de données | PostgreSQL (hébergée sur **Supabase**) |
-| Authentification | JWT + bcrypt |
-| Génération PDF | Puppeteer (Phase 6) |
-| Déploiement | Railway / Render |
+| Frontend | React (Vite) — hébergé sur **Vercel** |
+| Backend / Auth / API / Sécurité | **Supabase** (Auth + PostgreSQL + RLS) |
+| Stockage (logo) | Supabase Storage |
+| Génération PDF | `pdfmake` (côté navigateur, Phase 6) |
+| Déploiement | **Vercel + Supabase** uniquement |
+
+> Pas de serveur Express : le frontend parle directement à Supabase, et la
+> sécurité est assurée par les **politiques RLS** (Row Level Security) en base.
 
 ## Structure du projet
 
 ```
 school-rdc/
-├── client/      → Frontend React (interface en français)
-├── server/      → API REST Node/Express + authentification JWT
-└── database/    → Schéma SQL + scripts d'initialisation
+├── client/      → Frontend React (interface en français, client Supabase)
+├── database/    → schema.sql (tables + RLS) à exécuter dans Supabase
+└── scripts/     → seed.js (création des comptes + données de test)
 ```
 
 ## Avancement (par phases)
 
-- [x] **Phase 1** — Fondations & Authentification *(en cours de validation)*
+- [x] **Phase 1** — Fondations & Authentification *(Supabase Auth + dashboards)*
 - [ ] Phase 2 — Configuration de l'école (Admin)
 - [ ] Phase 3 — Gestion des élèves
 - [ ] Phase 4 — Présences
@@ -37,34 +39,36 @@ school-rdc/
 
 ---
 
-## Installation rapide (Phase 1)
+## Installation (Phase 1)
 
-### 1. Base de données (Supabase)
+### 1. Supabase — base de données
 
 1. Créez un projet sur [supabase.com](https://supabase.com).
-2. Dans le **SQL Editor**, exécutez le contenu de `database/schema.sql`.
-3. Copiez votre **Connection string** (Project Settings → Database → Connection string → URI).
+2. **SQL Editor** → collez tout `database/schema.sql` → **Run** (crée les tables + la RLS).
+3. **Project Settings → API** → notez :
+   - `Project URL`
+   - clé `anon` (publique)
+   - clé `service_role` (secrète — pour le seed uniquement)
 
-### 2. Backend (server)
+### 2. Seed — comptes + données de test
 
 ```bash
-cd server
-cp .env.example .env        # puis collez votre DATABASE_URL Supabase + un JWT_SECRET
+cd scripts
+cp .env.example .env     # collez SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY
 npm install
-npm run seed                # crée l'école, les niveaux, 1 admin et 1 enseignant de test
-npm run dev                 # démarre l'API sur http://localhost:5000
+npm run seed
 ```
 
 ### 3. Frontend (client)
 
 ```bash
 cd client
-cp .env.example .env        # VITE_API_URL=http://localhost:5000/api
+cp .env.example .env     # collez VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY
 npm install
-npm run dev                 # ouvre http://localhost:5173
+npm run dev              # http://localhost:5173
 ```
 
-### Comptes de test (après `npm run seed`)
+### Comptes de test (après le seed)
 
 | Rôle | Email | Mot de passe |
 |------|-------|--------------|
@@ -72,3 +76,18 @@ npm run dev                 # ouvre http://localhost:5173
 | Enseignant | `enseignant@ecole.cd` | `prof123` |
 
 > ⚠️ Changez ces mots de passe avant toute mise en production.
+
+---
+
+## Déploiement sur Vercel
+
+1. **Importez** le dépôt GitHub dans Vercel.
+2. **Root Directory** → `client` ⚠️ (sinon erreur 404).
+3. **Framework Preset** → Vite.
+4. **Environment Variables** (les deux seules nécessaires) :
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+5. **Deploy**.
+
+Aucune autre variable côté Vercel : la base, l'authentification et la sécurité
+sont entièrement gérées par Supabase.

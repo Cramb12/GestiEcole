@@ -1,6 +1,7 @@
-// Teacher dashboard — assigned classes + subjects, quick access tiles.
+// Teacher dashboard — assigned classes + subjects, read from Supabase.
+// RLS ensures a teacher only sees their own assignments.
 import { useEffect, useState } from 'react';
-import api from '../api/axios.js';
+import { supabase } from '../lib/supabase.js';
 import Layout from '../components/Layout.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -12,37 +13,73 @@ const QUICK = [
 
 export default function TeacherDashboard() {
   const { user } = useAuth();
-  const [data, setData] = useState(null);
+  const [ecole, setEcole] = useState(null);
+  const [affectations, setAffectations] = useState([]);
+  const [titulariat, setTitulariat] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api
-      .get('/dashboard/teacher')
-      .then((res) => setData(res.data))
-      .catch((err) =>
-        setError(err.response?.data?.message || 'Impossible de charger le tableau de bord.')
-      )
-      .finally(() => setLoading(false));
-  }, []);
+    if (!user) return;
+    async function load() {
+      try {
+        // School (for the header).
+        const { data: ecoleData } = await supabase
+          .from('ecole')
+          .select('nom_ecole, annee_scolaire')
+          .limit(1)
+          .maybeSingle();
+        setEcole(ecoleData);
 
-  const affectations = data?.affectations || [];
-  const titulariat = data?.titulariat || [];
+        // Assignments: subject + class (+ level) via foreign-key joins.
+        const { data: aff, error: e1 } = await supabase
+          .from('enseignant_branches')
+          .select('id, annee_scolaire, branches(nom, domaine, ordre), classes(nom, niveaux(nom, type))')
+          .eq('teacher_id', user.id);
+        if (e1) throw e1;
+
+        // Flatten the nested shape for easy rendering.
+        const flat = (aff || []).map((a) => ({
+          id: a.id,
+          branche: a.branches?.nom || '—',
+          domaine: a.branches?.domaine || a.classes?.niveaux?.nom || '',
+          classe: a.classes?.nom || '—',
+          ordre: a.branches?.ordre ?? 0,
+        }));
+        flat.sort((x, y) => x.classe.localeCompare(y.classe) || x.ordre - y.ordre);
+        setAffectations(flat);
+
+        // Classes where this teacher is the titulaire (homeroom).
+        const { data: tit } = await supabase
+          .from('classes')
+          .select('id, nom, niveaux(nom)')
+          .eq('titulaire_id', user.id);
+        setTitulariat(
+          (tit || []).map((c) => ({ id: c.id, classe: c.nom, niveau: c.niveaux?.nom || '' }))
+        );
+      } catch (err) {
+        setError(err.message || 'Impossible de charger le tableau de bord.');
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [user]);
 
   return (
-    <Layout ecoleNom={data?.ecole?.nom_ecole}>
+    <Layout ecoleNom={ecole?.nom_ecole}>
       <div className="welcome">
         <h1>Bonjour, {user?.nom} 👋</h1>
         <p>
           Bienvenue sur votre espace enseignant
-          {data?.ecole?.annee_scolaire ? ` — Année ${data.ecole.annee_scolaire}` : ''}
+          {ecole?.annee_scolaire ? ` — Année ${ecole.annee_scolaire}` : ''}
         </p>
       </div>
 
       {loading && <div className="empty-state">Chargement…</div>}
       {error && <div className="alert-error">{error}</div>}
 
-      {data && (
+      {!loading && !error && (
         <>
           {titulariat.length > 0 && (
             <>
@@ -69,9 +106,7 @@ export default function TeacherDashboard() {
               {affectations.map((a) => (
                 <div className="assign-card" key={a.id}>
                   <div className="branche">{a.branche}</div>
-                  <div className="meta">
-                    {a.domaine || a.niveau}
-                  </div>
+                  <div className="meta">{a.domaine}</div>
                   <span className="classe-pill">📚 {a.classe}</span>
                 </div>
               ))}
