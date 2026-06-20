@@ -30,7 +30,7 @@ school-rdc/
 
 - [x] **Phase 1** — Fondations & Authentification *(Supabase Auth + dashboards)*
 - [x] **Phase 2** — Configuration de l'école *(école+logo, classes, matières, enseignants, périodes)*
-- [ ] Phase 3 — Gestion des élèves
+- [x] **Phase 3** — Gestion des élèves *(inscription, liste/recherche, profil, promotion, import CSV)*
 - [ ] Phase 4 — Présences
 - [ ] Phase 5 — Saisie des notes
 - [ ] Phase 6 — Génération des bulletins

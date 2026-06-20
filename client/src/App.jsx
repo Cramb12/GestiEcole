@@ -10,6 +10,8 @@ import Classes from './pages/admin/Classes.jsx';
 import Branches from './pages/admin/Branches.jsx';
 import Enseignants from './pages/admin/Enseignants.jsx';
 import Periodes from './pages/admin/Periodes.jsx';
+import Eleves from './pages/admin/Eleves.jsx';
+import EleveProfile from './pages/admin/EleveProfile.jsx';
 
 // Sends a logged-in user to the correct home, or to /login otherwise.
 function Home() {
@@ -36,6 +38,8 @@ export default function App() {
       <Route path="/admin/classes" element={<Admin><Classes /></Admin>} />
       <Route path="/admin/matieres" element={<Admin><Branches /></Admin>} />
       <Route path="/admin/enseignants" element={<Admin><Enseignants /></Admin>} />
+      <Route path="/admin/eleves" element={<Admin><Eleves /></Admin>} />
+      <Route path="/admin/eleves/:id" element={<Admin><EleveProfile /></Admin>} />
       <Route path="/admin/periodes" element={<Admin><Periodes /></Admin>} />
 
       {/* Teacher */}
