@@ -17,6 +17,8 @@ export default function Classes() {
 
   const [modal, setModal] = useState(null); // null | {edit?, form}
   const [saving, setSaving] = useState(false);
+  const [preload, setPreload] = useState(null); // standard-classes generator
+  const [preloading, setPreloading] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -62,6 +64,59 @@ export default function Classes() {
         annee_scolaire: c.annee_scolaire,
       },
     });
+  }
+
+  function openPreload() {
+    setMsg(null);
+    setPreload({ primaire: true, co: true, sectionIds: [], annee: ecole?.annee_scolaire || '' });
+  }
+
+  // Generate the standard class structure from the official DRC degrees.
+  async function doPreload() {
+    const p = preload;
+    if (!p.annee.trim()) {
+      setMsg({ type: 'error', text: "Indiquez l'année scolaire." });
+      return;
+    }
+    const byTpl = {};
+    niveaux.forEach((n) => (byTpl[n.bulletin_template] = n.id));
+    const secById = {};
+    sections.forEach((s) => (secById[s.id] = s.nom));
+
+    const rows = [];
+    if (p.primaire) {
+      [['1ère année', 'elementaire'], ['2ème année', 'elementaire'], ['3ème année', 'moyen'],
+       ['4ème année', 'moyen'], ['5ème année', 'terminal'], ['6ème année', 'terminal']]
+        .forEach(([nom, tpl]) => { if (byTpl[tpl]) rows.push({ nom, niveau_id: byTpl[tpl], section_id: null, annee_scolaire: p.annee.trim() }); });
+    }
+    if (p.co && byTpl.cteb) {
+      ['7ème année', '8ème année'].forEach((nom) => rows.push({ nom, niveau_id: byTpl.cteb, section_id: null, annee_scolaire: p.annee.trim() }));
+    }
+    if (p.sectionIds.length && byTpl.humanites) {
+      p.sectionIds.forEach((sid) => {
+        ['1ère', '2ème', '3ème', '4ème'].forEach((y) =>
+          rows.push({ nom: `${y} Hum. ${secById[sid]}`, niveau_id: byTpl.humanites, section_id: sid, annee_scolaire: p.annee.trim() }));
+      });
+    }
+
+    // Skip classes that already exist (same name + year).
+    const existing = new Set(classes.map((c) => `${c.nom}|${c.annee_scolaire}`));
+    const toInsert = rows.filter((r) => !existing.has(`${r.nom}|${r.annee_scolaire}`));
+
+    if (toInsert.length === 0) {
+      setMsg({ type: 'error', text: 'Rien à créer (ces classes existent déjà ou aucune option sélectionnée).' });
+      return;
+    }
+    setPreloading(true);
+    const { error } = await supabase.from('classes').insert(toInsert);
+    setPreloading(false);
+    if (error) {
+      setMsg({ type: 'error', text: error.message });
+      return;
+    }
+    setPreload(null);
+    setMsg({ type: 'success', text: `${toInsert.length} classe(s) créée(s).` });
+    load();
   }
 
   async function save() {
@@ -115,6 +170,7 @@ export default function Classes() {
     <AdminLayout title="Gestion des classes" subtitle="Créez vos classes et assignez un niveau et un titulaire." ecoleNom={ecole?.nom_ecole}>
       <div className="toolbar">
         <button className="btn btn-primary btn-sm" onClick={openCreate}>+ Nouvelle classe</button>
+        <button className="btn btn-outline btn-sm" onClick={openPreload}>Pré-charger les classes standard</button>
         <div className="spacer" />
         <span className="admin-sub" style={{ margin: 0 }}>{classes.length} classe(s)</span>
       </div>
@@ -210,6 +266,65 @@ export default function Classes() {
               <input className="input" placeholder="2025-2026" value={modal.form.annee_scolaire} onChange={(e) => setModal({ ...modal, form: { ...modal.form, annee_scolaire: e.target.value } })} />
             </div>
           </div>
+        </Modal>
+      )}
+
+      {preload && (
+        <Modal
+          title="Pré-charger les classes standard"
+          onClose={() => setPreload(null)}
+          footer={
+            <>
+              <button className="btn btn-secondary" onClick={() => setPreload(null)}>Annuler</button>
+              <button className="btn btn-primary" onClick={doPreload} disabled={preloading}>{preloading ? 'Création…' : 'Créer les classes'}</button>
+            </>
+          }
+        >
+          <div style={{ marginBottom: 14 }}>
+            <label className="lbl">Année scolaire</label>
+            <input className="input" style={{ maxWidth: 200 }} value={preload.annee} onChange={(e) => setPreload({ ...preload, annee: e.target.value })} />
+          </div>
+
+          <label className="toggle" style={{ marginBottom: 10 }}>
+            <input type="checkbox" checked={preload.primaire} onChange={(e) => setPreload({ ...preload, primaire: e.target.checked })} />
+            <span className="track" />
+            <span>Primaire — 1ère à 6ème année</span>
+          </label>
+          <br />
+          <label className="toggle" style={{ marginBottom: 14 }}>
+            <input type="checkbox" checked={preload.co} onChange={(e) => setPreload({ ...preload, co: e.target.checked })} />
+            <span className="track" />
+            <span>Cycle d'Orientation — 7ème, 8ème</span>
+          </label>
+
+          <div className="lbl">Humanités (1ère à 4ème) — choisir les sections :</div>
+          {sections.length === 0 ? (
+            <div className="admin-sub">Aucune section. Créez-en d'abord dans « Sections ».</div>
+          ) : (
+            <div style={{ maxHeight: 200, overflowY: 'auto', border: '1px solid var(--gris-bord)', borderRadius: 9, padding: 10 }}>
+              {sections.map((s) => {
+                const on = preload.sectionIds.includes(s.id);
+                return (
+                  <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', fontSize: 14 }}>
+                    <input
+                      type="checkbox"
+                      checked={on}
+                      onChange={(e) =>
+                        setPreload({
+                          ...preload,
+                          sectionIds: e.target.checked ? [...preload.sectionIds, s.id] : preload.sectionIds.filter((x) => x !== s.id),
+                        })
+                      }
+                    />
+                    {s.nom}
+                  </label>
+                );
+              })}
+            </div>
+          )}
+          <p className="admin-sub" style={{ marginTop: 12, marginBottom: 0 }}>
+            Les classes déjà existantes (même nom + année) ne sont pas dupliquées. Vous pourrez ensuite renommer, ajouter des divisions (A, B…) et assigner les titulaires.
+          </p>
         </Modal>
       )}
     </AdminLayout>
