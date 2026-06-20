@@ -23,7 +23,7 @@ export default function Classes() {
   async function load() {
     setLoading(true);
     const [cl, nv, sec, tc, el] = await Promise.all([
-      supabase.from('classes').select('id, nom, annee_scolaire, niveau_id, titulaire_id, section_id, niveaux(nom, bulletin_template), profiles(nom, postnom), sections(nom)').order('nom'),
+      supabase.from('classes').select('id, nom, annee, annee_scolaire, niveau_id, titulaire_id, section_id, niveaux(nom, bulletin_template), profiles(nom, postnom), sections(nom)').order('nom'),
       supabase.from('niveaux').select('id, nom, type, bulletin_template').order('nom'),
       supabase.from('sections').select('id, nom').order('nom'),
       supabase.from('profiles').select('id, nom, postnom').eq('role', 'teacher').order('nom'),
@@ -49,7 +49,7 @@ export default function Classes() {
     setMsg(null);
     setModal({
       edit: null,
-      form: { nom: '', niveau_id: '', titulaire_id: '', section_id: '', annee_scolaire: ecole?.annee_scolaire || '' },
+      form: { nom: '', niveau_id: '', titulaire_id: '', section_id: '', annee: '', annee_scolaire: ecole?.annee_scolaire || '' },
     });
   }
   function openEdit(c) {
@@ -61,6 +61,7 @@ export default function Classes() {
         niveau_id: c.niveau_id,
         titulaire_id: c.titulaire_id || '',
         section_id: c.section_id || '',
+        annee: c.annee || '',
         annee_scolaire: c.annee_scolaire,
       },
     });
@@ -85,17 +86,17 @@ export default function Classes() {
 
     const rows = [];
     if (p.primaire) {
-      [['1ère année', 'elementaire'], ['2ème année', 'elementaire'], ['3ème année', 'moyen'],
-       ['4ème année', 'moyen'], ['5ème année', 'terminal'], ['6ème année', 'terminal']]
-        .forEach(([nom, tpl]) => { if (byTpl[tpl]) rows.push({ nom, niveau_id: byTpl[tpl], section_id: null, annee_scolaire: p.annee.trim() }); });
+      [['1ère année', 'elementaire', '1'], ['2ème année', 'elementaire', '2'], ['3ème année', 'moyen', '3'],
+       ['4ème année', 'moyen', '4'], ['5ème année', 'terminal', '5'], ['6ème année', 'terminal', '6']]
+        .forEach(([nom, tpl, an]) => { if (byTpl[tpl]) rows.push({ nom, niveau_id: byTpl[tpl], section_id: null, annee: an, annee_scolaire: p.annee.trim() }); });
     }
     if (p.co && byTpl.cteb) {
-      ['7ème année', '8ème année'].forEach((nom) => rows.push({ nom, niveau_id: byTpl.cteb, section_id: null, annee_scolaire: p.annee.trim() }));
+      [['7ème année', '7'], ['8ème année', '8']].forEach(([nom, an]) => rows.push({ nom, niveau_id: byTpl.cteb, section_id: null, annee: an, annee_scolaire: p.annee.trim() }));
     }
     if (p.sectionIds.length && byTpl.humanites) {
       p.sectionIds.forEach((sid) => {
-        ['1ère', '2ème', '3ème', '4ème'].forEach((y) =>
-          rows.push({ nom: `${y} Hum. ${secById[sid]}`, niveau_id: byTpl.humanites, section_id: sid, annee_scolaire: p.annee.trim() }));
+        [['1ère', '1'], ['2ème', '2'], ['3ème', '3'], ['4ème', '4']].forEach(([y, an]) =>
+          rows.push({ nom: `${y} Hum. ${secById[sid]}`, niveau_id: byTpl.humanites, section_id: sid, annee: an, annee_scolaire: p.annee.trim() }));
       });
     }
 
@@ -135,6 +136,7 @@ export default function Classes() {
       niveau_id: f.niveau_id,
       titulaire_id: f.titulaire_id || null,
       section_id: isHumanites ? f.section_id || null : null,
+      annee: f.annee.trim() || null,
       annee_scolaire: f.annee_scolaire.trim(),
     };
     let res;
@@ -254,6 +256,10 @@ export default function Classes() {
                 )}
               </div>
             )}
+            <div>
+              <label className="lbl">Année (1 à 8)</label>
+              <input className="input" placeholder="ex: 7 (utile au secondaire)" value={modal.form.annee} onChange={(e) => setModal({ ...modal, form: { ...modal.form, annee: e.target.value } })} />
+            </div>
             <div>
               <label className="lbl">Titulaire</label>
               <select className="input" value={modal.form.titulaire_id} onChange={(e) => setModal({ ...modal, form: { ...modal.form, titulaire_id: e.target.value } })}>

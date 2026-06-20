@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 
 const QUICK = [
   { label: 'Présences', to: '/enseignant/presences' },
-  { label: 'Notes' },
+  { label: 'Notes', to: '/enseignant/notes' },
   { label: 'Bulletins' },
 ];
 

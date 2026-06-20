@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS classes (
     nom             VARCHAR(50) NOT NULL,
     niveau_id       UUID NOT NULL REFERENCES niveaux(id) ON DELETE RESTRICT,
     section_id      UUID REFERENCES sections(id) ON DELETE SET NULL,
+    annee           VARCHAR(10),                        -- année d'études '1'..'8'
     annee_scolaire  VARCHAR(20) NOT NULL,
     titulaire_id    UUID REFERENCES profiles(id) ON DELETE SET NULL,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
