@@ -43,7 +43,7 @@ export default function Notes() {
       setPeriodes(per.data || []);
       setPeriodeId(per.data && per.data.length ? per.data[0].id : '');
       const list = (br.data || []).filter(
-        (b) => (b.section_id || null) === (classe.section_id || null) && brancheApplies(b.annee, classe.annee)
+        (b) => (!b.section_id || b.section_id === classe.section_id) && brancheApplies(b.annee, classe.annee)
       );
       setCourses(list);
     }

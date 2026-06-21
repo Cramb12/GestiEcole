@@ -19,10 +19,13 @@ export const TITRE = {
   humanites: "BULLETIN DE L'ÉLÈVE — HUMANITÉS",
 };
 
-// Load the applicable subjects for a class (level + section + year).
+// Load the applicable subjects for a class. Lenient on purpose: includes
+// section-specific subjects AND generic ones (section null), so a class works
+// whether subjects were loaded per-section or as generic level subjects.
 async function loadCourses(classe) {
   let q = supabase.from('branches').select('*').eq('niveau_id', classe.niveau_id);
-  q = classe.section_id ? q.eq('section_id', classe.section_id) : q.is('section_id', null);
+  if (classe.section_id) q = q.or(`section_id.eq.${classe.section_id},section_id.is.null`);
+  else q = q.is('section_id', null);
   const { data } = await q.order('ordre').order('nom');
   return (data || []).filter((b) => brancheApplies(b.annee, classe.annee));
 }
@@ -79,6 +82,17 @@ export async function buildBulletin(eleveId) {
     .eq('eleve_id', eleveId)
     .in('periode_id', periodeIds.length ? periodeIds : ['00000000-0000-0000-0000-000000000000']);
   const noteOf = (brId, perId) => (notes || []).find((n) => n.branche_id === brId && n.periode_id === perId);
+
+  // Safety net: include any subject the student actually has a note for, even
+  // if the curriculum filter missed it (section/year data mismatch). This
+  // guarantees every graded subject appears on the bulletin.
+  const courseIds = new Set(courses.map((c) => c.id));
+  const missingIds = [...new Set((notes || []).map((n) => n.branche_id))].filter((id) => !courseIds.has(id));
+  if (missingIds.length) {
+    const { data: extra } = await supabase.from('branches').select('*').in('id', missingIds);
+    (extra || []).forEach((b) => courses.push(b));
+    courses.sort((a, b) => (a.ordre - b.ordre) || a.nom.localeCompare(b.nom));
+  }
 
   // Group courses by domaine (keeping order), compute per-period cells + totals.
   const domaines = [];
