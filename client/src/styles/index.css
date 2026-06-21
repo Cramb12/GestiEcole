@@ -75,14 +75,11 @@ button { cursor: pointer; font-family: inherit; }
 }
 
 .login-logo {
-  width: 72px; height: 72px;
+  width: 88px; height: 88px;
   margin: 0 auto 14px;
-  border-radius: 50%;
-  background: var(--jaune);
   display: flex; align-items: center; justify-content: center;
-  font-size: 34px;
-  border: 3px solid var(--rouge);
 }
+.login-logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
 .login-title { text-align: center; font-size: 20px; font-weight: 700; }
 .login-sub { text-align: center; color: var(--texte-clair); font-size: 14px; margin-bottom: 24px; }
@@ -493,12 +490,12 @@ table.b-grid tr.b-foot-row td { background: #fff; font-weight: 700; text-align: 
   display: flex; align-items: center; justify-content: space-between;
 }
 .lp-brand { display: flex; align-items: center; gap: 11px; font-weight: 800; font-size: 19px; color: #fff; }
-.lp-logo {
-  width: 38px; height: 38px; border-radius: 10px;
-  background: var(--jaune); color: var(--bleu-fonce);
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 16px; border: 2px solid var(--rouge);
+.lp-logo-chip {
+  width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0;
+  background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+  display: flex; align-items: center; justify-content: center; padding: 3px;
 }
+.lp-logo-chip img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .lp-nav-actions { display: flex; align-items: center; gap: 16px; }
 .lp-nav-link { color: #fff; text-decoration: none; font-weight: 600; font-size: 14.5px; opacity: 0.9; }
 .lp-nav-link:hover { opacity: 1; }
@@ -630,9 +627,12 @@ table.b-grid tr.b-foot-row td { background: #fff; font-weight: 700; text-align: 
   display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px;
 }
 .lp-brand-light { color: #fff; }
-.lp-footer-contact { display: flex; flex-direction: column; gap: 6px; text-align: right; font-size: 14px; }
+.lp-footer-tag { color: #8fa3b5; font-size: 13.5px; margin-top: 10px; max-width: 320px; }
+.lp-footer-contact { display: flex; flex-direction: column; gap: 8px; text-align: right; font-size: 14px; align-items: flex-end; }
 .lp-footer-contact a { color: var(--jaune); text-decoration: none; }
 .lp-footer-contact a:hover { text-decoration: underline; }
+.lp-btn-wa { background: #25d366; color: #06381b; padding: 9px 16px; margin-top: 4px; }
+.lp-btn-wa:hover { background: #1fbe5a; text-decoration: none !important; }
 .lp-footer-bottom {
   max-width: 1140px; margin: 24px auto 0; padding-top: 18px;
   border-top: 1px solid rgba(255,255,255,0.1); font-size: 13px; color: #8fa3b5; text-align: center;
