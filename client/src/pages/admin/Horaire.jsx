@@ -1,10 +1,10 @@
-// Class timetable. You build the schedule; the teacher↔subject↔class
-// assignment (enseignant_branches) is created automatically from it.
+// Class timetable. The schedule is built FROM existing assignments:
+// only subjects already assigned to a teacher for this class can be placed.
+// (Step 1: assign teachers in "Enseignants". Step 2: build the timetable.)
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase.js';
 import { useEcole } from '../../lib/useEcole.js';
-import { brancheApplies } from '../../lib/notes.js';
 import AdminLayout from '../../components/AdminLayout.jsx';
 import Modal from '../../components/Modal.jsx';
 
@@ -16,8 +16,7 @@ export default function Horaire() {
   const [classes, setClasses] = useState([]);
   const [classeId, setClasseId] = useState('');
   const [creneaux, setCreneaux] = useState([]);
-  const [branches, setBranches] = useState([]);
-  const [teachers, setTeachers] = useState([]);
+  const [affectations, setAffectations] = useState([]); // class's assignments
   const [horaires, setHoraires] = useState([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState(null);
@@ -28,25 +27,27 @@ export default function Horaire() {
 
   useEffect(() => {
     Promise.all([
-      supabase.from('classes').select('id, nom, niveau_id, section_id, annee, niveaux(nom)').order('nom'),
+      supabase.from('classes').select('id, nom, niveau_id, niveaux(nom)').order('nom'),
       supabase.from('creneaux').select('*').order('ordre'),
-      supabase.from('profiles').select('id, nom, postnom').eq('role', 'teacher').order('nom'),
-    ]).then(([cl, cr, tc]) => {
+    ]).then(([cl, cr]) => {
       setClasses(cl.data || []);
       setCreneaux(cr.data || []);
-      setTeachers(tc.data || []);
       if (cl.data && cl.data.length) setClasseId(cl.data[0].id);
       setLoading(false);
     });
   }, []);
 
   async function loadClasse() {
-    if (!classe) return;
-    const [br, ho] = await Promise.all([
-      supabase.from('branches').select('id, nom, section_id, annee').eq('niveau_id', classe.niveau_id).order('ordre').order('nom'),
-      supabase.from('horaires').select('id, creneau_id, jour, salle, branche_id, enseignant_id, branches(nom), profiles(nom, postnom)').eq('classe_id', classeId).eq('annee_scolaire', annee),
+    if (!classeId) return;
+    const [af, ho] = await Promise.all([
+      supabase.from('enseignant_branches')
+        .select('id, branche_id, teacher_id, branches(nom), profiles(nom, postnom)')
+        .eq('classe_id', classeId).eq('annee_scolaire', annee),
+      supabase.from('horaires')
+        .select('id, creneau_id, jour, salle, branche_id, enseignant_id, branches(nom), profiles(nom, postnom)')
+        .eq('classe_id', classeId).eq('annee_scolaire', annee),
     ]);
-    setBranches((br.data || []).filter((b) => (!b.section_id || b.section_id === classe.section_id) && brancheApplies(b.annee, classe.annee)));
+    setAffectations(af.data || []);
     setHoraires(ho.data || []);
   }
 
@@ -64,51 +65,32 @@ export default function Horaire() {
   function openCell(creneau, jour) {
     setMsg(null);
     const h = horaireMap[`${creneau.id}-${jour}`];
-    setCell({
-      creneau, jour,
-      existingId: h?.id || null,
-      form: { branche_id: h?.branche_id || '', enseignant_id: h?.enseignant_id || '', salle: h?.salle || '' },
-    });
+    // Find which assignment matches an existing slot.
+    const aff = h ? affectations.find((a) => a.branche_id === h.branche_id && a.teacher_id === h.enseignant_id) : null;
+    setCell({ creneau, jour, existingId: h?.id || null, form: { affectation_id: aff?.id || '', salle: h?.salle || '' } });
   }
 
   async function save() {
-    const f = cell.form;
-    if (!f.branche_id || !f.enseignant_id) {
-      setMsg({ type: 'error', text: 'Choisissez la matière et l\'enseignant.' });
-      return;
-    }
+    const aff = affectations.find((a) => a.id === cell.form.affectation_id);
+    if (!aff) { setMsg({ type: 'error', text: 'Choisissez un cours affecté.' }); return; }
     setSaving(true);
 
     // Conflict: teacher already busy elsewhere at this day+slot.
     const { data: conf } = await supabase
-      .from('horaires')
-      .select('classes(nom)')
-      .eq('enseignant_id', f.enseignant_id)
-      .eq('jour', cell.jour)
-      .eq('creneau_id', cell.creneau.id)
-      .eq('annee_scolaire', annee)
-      .neq('classe_id', classeId);
+      .from('horaires').select('classes(nom)')
+      .eq('enseignant_id', aff.teacher_id).eq('jour', cell.jour).eq('creneau_id', cell.creneau.id)
+      .eq('annee_scolaire', annee).neq('classe_id', classeId);
     if (conf && conf.length) {
       setSaving(false);
       setMsg({ type: 'error', text: `Conflit : cet enseignant est déjà en « ${conf[0].classes?.nom} » à ce créneau.` });
       return;
     }
 
-    // Upsert the timetable slot.
-    const row = { classe_id: classeId, creneau_id: cell.creneau.id, jour: cell.jour, branche_id: f.branche_id, enseignant_id: f.enseignant_id, salle: f.salle.trim() || null, annee_scolaire: annee };
+    const row = { classe_id: classeId, creneau_id: cell.creneau.id, jour: cell.jour, branche_id: aff.branche_id, enseignant_id: aff.teacher_id, salle: cell.form.salle.trim() || null, annee_scolaire: annee };
     const up = await supabase.from('horaires').upsert(row, { onConflict: 'classe_id,creneau_id,jour,annee_scolaire' });
-    if (up.error) { setSaving(false); setMsg({ type: 'error', text: up.error.message }); return; }
-
-    // Auto-create the assignment (enseignant_branches) if missing.
-    await supabase.from('enseignant_branches').upsert(
-      { teacher_id: f.enseignant_id, branche_id: f.branche_id, classe_id: classeId, annee_scolaire: annee },
-      { onConflict: 'teacher_id,branche_id,classe_id,annee_scolaire' }
-    );
-
     setSaving(false);
-    setCell(null);
-    setMsg({ type: 'success', text: 'Créneau enregistré (affectation créée si besoin).' });
-    loadClasse();
+    if (up.error) { setMsg({ type: 'error', text: up.error.message }); return; }
+    setCell(null); setMsg({ type: 'success', text: 'Créneau enregistré.' }); loadClasse();
   }
 
   async function clearCell() {
@@ -118,11 +100,10 @@ export default function Horaire() {
     else { setCell(null); setMsg({ type: 'success', text: 'Créneau vidé.' }); loadClasse(); }
   }
 
-  const tName = (t) => `${t.nom} ${t.postnom || ''}`.trim();
-  const brName = (id) => branches.find((b) => b.id === id)?.nom || '';
+  const affLabel = (a) => `${a.branches?.nom || '—'} — ${a.profiles ? `${a.profiles.nom} ${a.profiles.postnom || ''}`.trim() : ''}`;
 
   return (
-    <AdminLayout title="Emploi du temps" subtitle="Construisez l'horaire par classe. L'affectation matière↔enseignant est créée automatiquement." ecoleNom={ecole?.nom_ecole}>
+    <AdminLayout title="Emploi du temps" subtitle="Construisez l'horaire à partir des cours déjà affectés. Étape 1 : affecter les enseignants. Étape 2 : placer les cours dans la grille." ecoleNom={ecole?.nom_ecole}>
       <div className="toolbar">
         <div>
           <label className="lbl">Classe</label>
@@ -131,6 +112,7 @@ export default function Horaire() {
           </select>
         </div>
         <div className="spacer" />
+        <span className="admin-sub" style={{ margin: 0 }}>{affectations.length} cours affecté(s)</span>
         <Link className="btn btn-secondary btn-sm" to="/admin/creneaux" style={{ textDecoration: 'none' }}>Régler les créneaux</Link>
       </div>
 
@@ -140,20 +122,20 @@ export default function Horaire() {
         <div className="empty-state">Chargement…</div>
       ) : creneaux.length === 0 ? (
         <div className="empty-state">Aucun créneau. Configurez-les dans « Régler les créneaux ».</div>
+      ) : affectations.length === 0 ? (
+        <div className="empty-state">
+          Aucun cours n'est affecté à cette classe.<br />
+          Affectez d'abord des enseignants dans <Link to="/admin/enseignants">Enseignants → Gérer les affectations</Link>, puis revenez ici.
+        </div>
       ) : (
         <div className="table-wrap">
           <table className="ht-table">
             <thead>
-              <tr>
-                <th className="ht-time">Heure</th>
-                {JOURS.map((j) => <th key={j}>{j}</th>)}
-              </tr>
+              <tr><th className="ht-time">Heure</th>{JOURS.map((j) => <th key={j}>{j}</th>)}</tr>
             </thead>
             <tbody>
               {creneaux.map((cr) => cr.type === 'pause' ? (
-                <tr className="ht-pause" key={cr.id}>
-                  <td colSpan={JOURS.length + 1}>{cr.label} ({cr.heure_debut} – {cr.heure_fin})</td>
-                </tr>
+                <tr className="ht-pause" key={cr.id}><td colSpan={JOURS.length + 1}>{cr.label} ({cr.heure_debut} – {cr.heure_fin})</td></tr>
               ) : (
                 <tr key={cr.id}>
                   <td className="ht-time"><span className="lab">{cr.label}</span>{cr.heure_debut}–{cr.heure_fin}</td>
@@ -194,17 +176,10 @@ export default function Horaire() {
           {msg && msg.type === 'error' && <div className="alert-error">{msg.text}</div>}
           <div className="form-grid">
             <div>
-              <label className="lbl">Matière <span className="req">*</span></label>
-              <select className="input" value={cell.form.branche_id} onChange={(e) => setCell({ ...cell, form: { ...cell.form, branche_id: e.target.value } })}>
+              <label className="lbl">Cours affecté <span className="req">*</span></label>
+              <select className="input" value={cell.form.affectation_id} onChange={(e) => setCell({ ...cell, form: { ...cell.form, affectation_id: e.target.value } })}>
                 <option value="">— Choisir —</option>
-                {branches.map((b) => <option key={b.id} value={b.id}>{b.nom}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="lbl">Enseignant <span className="req">*</span></label>
-              <select className="input" value={cell.form.enseignant_id} onChange={(e) => setCell({ ...cell, form: { ...cell.form, enseignant_id: e.target.value } })}>
-                <option value="">— Choisir —</option>
-                {teachers.map((t) => <option key={t.id} value={t.id}>{tName(t)}</option>)}
+                {affectations.map((a) => <option key={a.id} value={a.id}>{affLabel(a)}</option>)}
               </select>
             </div>
             <div>
@@ -213,7 +188,7 @@ export default function Horaire() {
             </div>
           </div>
           <p className="admin-sub" style={{ marginTop: 10, marginBottom: 0 }}>
-            En enregistrant, l'affectation « {brName(cell.form.branche_id)} » → cet enseignant pour cette classe est créée automatiquement.
+            Seuls les cours déjà affectés à cette classe apparaissent. Pour en ajouter, passez par « Enseignants → Gérer les affectations ».
           </p>
         </Modal>
       )}
