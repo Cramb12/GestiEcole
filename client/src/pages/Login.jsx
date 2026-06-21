@@ -1,14 +1,19 @@
 // Login page — email + password, with school logo placeholder.
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+
+// Demo credentials pre-filled when arriving from the landing page (?demo=1).
+const DEMO = { email: 'directeur@ecole.cd', password: 'admin123' };
 
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const isDemo = params.get('demo') === '1';
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState(isDemo ? DEMO.email : '');
+  const [password, setPassword] = useState(isDemo ? DEMO.password : '');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -47,6 +52,12 @@ export default function Login() {
         <div className="login-title">Système de Gestion Scolaire</div>
         <div className="login-sub">République Démocratique du Congo</div>
 
+        {isDemo && (
+          <div className="alert-error" style={{ background: '#fff7e0', color: '#8a6d00', borderColor: '#f3d98a' }}>
+            Mode démonstration — identifiants pré-remplis. Cliquez sur « Se connecter ».
+          </div>
+        )}
+
         {error && <div className="alert-error">{error}</div>}
 
         <div className="field">
@@ -78,9 +89,11 @@ export default function Login() {
         </button>
 
         <div className="login-hint">
-          Comptes de test :<br />
-          Admin → <strong>directeur@ecole.cd</strong> / admin123<br />
-          Enseignant → <strong>enseignant@ecole.cd</strong> / prof123
+          Comptes de démonstration :<br />
+          Direction → <strong>directeur@ecole.cd</strong> / admin123<br />
+          Enseignant → <strong>demo.kalala@ecole.cd</strong> / demo2025
+          <br />
+          <Link to="/" style={{ color: 'var(--bleu)', fontWeight: 600 }}>Retour à l'accueil</Link>
         </div>
       </form>
     </div>

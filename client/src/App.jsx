@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Login from './pages/Login.jsx';
+import Landing from './pages/Landing.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import TeacherDashboard from './pages/TeacherDashboard.jsx';
 import Configuration from './pages/admin/Configuration.jsx';
@@ -24,11 +25,11 @@ import Horaire from './pages/admin/Horaire.jsx';
 import Creneaux from './pages/admin/Creneaux.jsx';
 import HoraireTeacher from './pages/teacher/Horaire.jsx';
 
-// Sends a logged-in user to the correct home, or to /login otherwise.
+// Public landing for visitors; logged-in users go straight to their dashboard.
 function Home() {
   const { user, loading } = useAuth();
   if (loading) return <div className="center-screen">Chargement…</div>;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Landing />;
   return <Navigate to={user.role === 'super_admin' ? '/admin' : '/enseignant'} replace />;
 }
 
