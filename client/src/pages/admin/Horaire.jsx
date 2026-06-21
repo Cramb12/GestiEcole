@@ -5,8 +5,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase.js';
 import { useEcole } from '../../lib/useEcole.js';
+import { downloadCSV } from '../../lib/csv.js';
 import AdminLayout from '../../components/AdminLayout.jsx';
 import Modal from '../../components/Modal.jsx';
+import CsvImportModal from '../../components/CsvImportModal.jsx';
+
+const JOURMAP = { lundi: 1, mardi: 2, mercredi: 3, jeudi: 4, vendredi: 5, samedi: 6 };
 
 const JOURS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
 
@@ -22,6 +26,7 @@ export default function Horaire() {
   const [msg, setMsg] = useState(null);
   const [cell, setCell] = useState(null); // { creneau, jour, form, existingId }
   const [saving, setSaving] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const classe = useMemo(() => classes.find((c) => c.id === classeId), [classes, classeId]);
 
@@ -102,6 +107,40 @@ export default function Horaire() {
 
   const affLabel = (a) => `${a.branches?.nom || '—'} — ${a.profiles ? `${a.profiles.nom} ${a.profiles.postnom || ''}`.trim() : ''}`;
 
+  function dlTemplate() {
+    downloadCSV('modele_horaire.csv', 'classe,jour,creneau,matiere,enseignant_email,salle\n1ère Hum. Scientifique,Lundi,1ère heure,Mathématiques,j.kalala@ecole.cd,A1\n');
+  }
+
+  // Bulk timetable import. Each row must reference a subject already assigned
+  // to a teacher for that class (assignment-first rule kept).
+  async function importHoraires(rows) {
+    let ok = 0; const errors = [];
+    const { data: allCl } = await supabase.from('classes').select('id, nom');
+    const clByName = {}; (allCl || []).forEach((c) => (clByName[c.nom.toLowerCase().trim()] = c.id));
+    const crByLabel = {}; creneaux.forEach((c) => (crByLabel[c.label.toLowerCase().trim()] = c));
+    const { data: allAff } = await supabase.from('enseignant_branches')
+      .select('classe_id, branche_id, teacher_id, branches(nom), profiles(email)').eq('annee_scolaire', annee);
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i]; const ligne = i + 2;
+      const cid = clByName[String(r.classe || '').toLowerCase().trim()];
+      if (!cid) { errors.push(`Ligne ${ligne}: classe « ${r.classe} » introuvable.`); continue; }
+      const jour = JOURMAP[String(r.jour || '').toLowerCase().trim()];
+      if (!jour) { errors.push(`Ligne ${ligne}: jour « ${r.jour} » invalide (Lundi…Samedi).`); continue; }
+      const cr = crByLabel[String(r.creneau || '').toLowerCase().trim()];
+      if (!cr) { errors.push(`Ligne ${ligne}: créneau « ${r.creneau} » introuvable.`); continue; }
+      if (cr.type === 'pause') { errors.push(`Ligne ${ligne}: « ${r.creneau} » est une récréation.`); continue; }
+      let cands = (allAff || []).filter((a) => a.classe_id === cid && (a.branches?.nom || '').toLowerCase().trim() === String(r.matiere || '').toLowerCase().trim());
+      if (r.enseignant_email) cands = cands.filter((a) => (a.profiles?.email || '').toLowerCase().trim() === String(r.enseignant_email).toLowerCase().trim());
+      if (cands.length === 0) { errors.push(`Ligne ${ligne}: « ${r.matiere} » non affecté à cette classe (affectez-le d'abord).`); continue; }
+      const aff = cands[0];
+      const { error } = await supabase.from('horaires').upsert(
+        { classe_id: cid, creneau_id: cr.id, jour, branche_id: aff.branche_id, enseignant_id: aff.teacher_id, salle: r.salle || null, annee_scolaire: annee },
+        { onConflict: 'classe_id,creneau_id,jour,annee_scolaire' });
+      if (error) errors.push(`Ligne ${ligne}: ${error.message}`); else ok++;
+    }
+    return { ok, errors };
+  }
+
   return (
     <AdminLayout title="Emploi du temps" subtitle="Construisez l'horaire à partir des cours déjà affectés. Étape 1 : affecter les enseignants. Étape 2 : placer les cours dans la grille." ecoleNom={ecole?.nom_ecole}>
       <div className="toolbar">
@@ -113,6 +152,8 @@ export default function Horaire() {
         </div>
         <div className="spacer" />
         <span className="admin-sub" style={{ margin: 0 }}>{affectations.length} cours affecté(s)</span>
+        <button className="btn btn-outline btn-sm" onClick={() => { setMsg(null); setImportOpen(true); }}>Importer (CSV)</button>
+        <button className="btn btn-secondary btn-sm" onClick={dlTemplate}>Modèle</button>
         <Link className="btn btn-secondary btn-sm" to="/admin/creneaux" style={{ textDecoration: 'none' }}>Régler les créneaux</Link>
       </div>
 
@@ -191,6 +232,17 @@ export default function Horaire() {
             Seuls les cours déjà affectés à cette classe apparaissent. Pour en ajouter, passez par « Enseignants → Gérer les affectations ».
           </p>
         </Modal>
+      )}
+
+      {importOpen && (
+        <CsvImportModal
+          title="Importer l'horaire (CSV)"
+          expected="classe, jour, creneau, matiere, enseignant_email, salle"
+          note="Le cours doit déjà être affecté à la classe. jour = Lundi…Samedi ; creneau = libellé exact (ex. « 1ère heure »)."
+          onImport={importHoraires}
+          onClose={() => setImportOpen(false)}
+          onDone={loadClasse}
+        />
       )}
     </AdminLayout>
   );

@@ -2,8 +2,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabase.js';
 import { useEcole } from '../../lib/useEcole.js';
+import { downloadCSV } from '../../lib/csv.js';
 import AdminLayout from '../../components/AdminLayout.jsx';
 import Modal from '../../components/Modal.jsx';
+import CsvImportModal from '../../components/CsvImportModal.jsx';
 
 export default function Enseignants() {
   const { ecole } = useEcole();
@@ -16,6 +18,7 @@ export default function Enseignants() {
 
   const [createModal, setCreateModal] = useState(null); // { form, saving, error }
   const [assignFor, setAssignFor] = useState(null); // teacher object
+  const [importKind, setImportKind] = useState(null); // 'comptes' | 'affectations'
 
   async function load() {
     setLoading(true);
@@ -119,12 +122,60 @@ export default function Enseignants() {
     else load();
   }
 
+  // ---- CSV imports ----------------------------------------------------
+  function dlComptes() {
+    downloadCSV('modele_enseignants_comptes.csv', 'nom,postnom,email,password\nKalala,Mbuyi,j.kalala@ecole.cd,prof2025\n');
+  }
+  function dlAffectations() {
+    downloadCSV('modele_affectations.csv', 'email,matiere,classe\nj.kalala@ecole.cd,Mathématiques,1ère Hum. Scientifique\n');
+  }
+
+  // Create teacher accounts in bulk (via the create-teacher Edge Function).
+  async function importComptes(rows) {
+    let ok = 0; const errors = [];
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i]; const ligne = i + 2;
+      if (!r.nom || !r.email || !r.password) { errors.push(`Ligne ${ligne}: nom, email, password requis.`); continue; }
+      if (String(r.password).length < 6) { errors.push(`Ligne ${ligne}: mot de passe trop court (min. 6).`); continue; }
+      const { error } = await supabase.functions.invoke('create-teacher', { body: { nom: r.nom, postnom: r.postnom || '', email: String(r.email).toLowerCase().trim(), password: r.password } });
+      if (error) {
+        let d = error.message; try { const b = await error.context.json(); if (b?.message) d = b.message; } catch { /* ignore */ }
+        errors.push(`Ligne ${ligne} (${r.email}): ${d}`);
+      } else ok++;
+    }
+    return { ok, errors };
+  }
+
+  // Assign subjects to teachers in bulk (email + matière + classe).
+  async function importAffectations(rows) {
+    let ok = 0; const errors = [];
+    const byEmail = {}; teachers.forEach((t) => (byEmail[(t.email || '').toLowerCase().trim()] = t.id));
+    const clByName = {}; classes.forEach((c) => (clByName[c.nom.toLowerCase().trim()] = c));
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i]; const ligne = i + 2;
+      if (!r.email || !r.matiere || !r.classe) { errors.push(`Ligne ${ligne}: email, matiere, classe requis.`); continue; }
+      const tid = byEmail[String(r.email).toLowerCase().trim()];
+      if (!tid) { errors.push(`Ligne ${ligne}: enseignant « ${r.email} » introuvable.`); continue; }
+      const cl = clByName[String(r.classe).toLowerCase().trim()];
+      if (!cl) { errors.push(`Ligne ${ligne}: classe « ${r.classe} » introuvable.`); continue; }
+      const br = branches.find((b) => b.niveau_id === cl.niveau_id && b.nom.toLowerCase().trim() === String(r.matiere).toLowerCase().trim());
+      if (!br) { errors.push(`Ligne ${ligne}: matière « ${r.matiere} » introuvable pour ce niveau.`); continue; }
+      const { error } = await supabase.from('enseignant_branches').upsert({ teacher_id: tid, branche_id: br.id, classe_id: cl.id, annee_scolaire: ecole?.annee_scolaire || '' }, { onConflict: 'teacher_id,branche_id,classe_id,annee_scolaire' });
+      if (error) errors.push(`Ligne ${ligne}: ${error.message}`); else ok++;
+    }
+    return { ok, errors };
+  }
+
   const name = (t) => `${t.nom} ${t.postnom || ''}`.trim();
 
   return (
     <AdminLayout title="Gestion des enseignants" subtitle="Créez les comptes enseignants et affectez-leur des matières par classe." ecoleNom={ecole?.nom_ecole}>
       <div className="toolbar">
         <button className="btn btn-primary btn-sm" onClick={openCreate}>+ Nouvel enseignant</button>
+        <button className="btn btn-outline btn-sm" onClick={() => { setMsg(null); setImportKind('comptes'); }}>Importer comptes (CSV)</button>
+        <button className="btn btn-outline btn-sm" onClick={() => { setMsg(null); setImportKind('affectations'); }}>Importer affectations (CSV)</button>
+        <button className="btn btn-secondary btn-sm" onClick={dlComptes}>Modèle comptes</button>
+        <button className="btn btn-secondary btn-sm" onClick={dlAffectations}>Modèle affectations</button>
         <div className="spacer" />
         <span className="admin-sub" style={{ margin: 0 }}>{teachers.length} enseignant(s)</span>
       </div>
@@ -205,6 +256,28 @@ export default function Enseignants() {
             L'enseignant pourra se connecter immédiatement avec cet email et ce mot de passe.
           </p>
         </Modal>
+      )}
+
+      {/* CSV import modals */}
+      {importKind === 'comptes' && (
+        <CsvImportModal
+          title="Importer des comptes enseignants (CSV)"
+          expected="nom, postnom, email, password"
+          note="Chaque ligne crée un compte de connexion (mot de passe ≥ 6 caractères)."
+          onImport={importComptes}
+          onClose={() => setImportKind(null)}
+          onDone={load}
+        />
+      )}
+      {importKind === 'affectations' && (
+        <CsvImportModal
+          title="Importer des affectations (CSV)"
+          expected="email, matiere, classe"
+          note="L'email doit correspondre à un enseignant existant ; la classe et la matière à des noms exacts."
+          onImport={importAffectations}
+          onClose={() => setImportKind(null)}
+          onDone={load}
+        />
       )}
 
       {/* Assignments modal */}
