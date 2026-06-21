@@ -13,6 +13,7 @@ const MENU = [
   { label: 'Matières', to: '/admin/matieres' },
   { label: 'Sections', to: '/admin/sections' },
   { label: 'Enseignants', to: '/admin/enseignants' },
+  { label: 'Emploi du temps', to: '/admin/horaire' },
   { label: 'Périodes', to: '/admin/periodes' },
   { label: 'Élèves', to: '/admin/eleves' },
   { label: 'Présences', to: '/admin/presences' },

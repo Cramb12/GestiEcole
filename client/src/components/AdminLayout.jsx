@@ -9,6 +9,7 @@ const LINKS = [
   { to: '/admin/matieres', label: 'Matières' },
   { to: '/admin/sections', label: 'Sections' },
   { to: '/admin/enseignants', label: 'Enseignants' },
+  { to: '/admin/horaire', label: 'Emploi du temps' },
   { to: '/admin/eleves', label: 'Élèves' },
   { to: '/admin/presences', label: 'Présences' },
   { to: '/admin/notes', label: 'Notes' },

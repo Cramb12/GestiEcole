@@ -19,6 +19,9 @@ import AdminNotes from './pages/admin/Notes.jsx';
 import TeacherNotes from './pages/teacher/Notes.jsx';
 import Bulletins from './pages/admin/Bulletins.jsx';
 import BulletinEleve from './pages/admin/BulletinEleve.jsx';
+import Horaire from './pages/admin/Horaire.jsx';
+import Creneaux from './pages/admin/Creneaux.jsx';
+import HoraireTeacher from './pages/teacher/Horaire.jsx';
 
 // Sends a logged-in user to the correct home, or to /login otherwise.
 function Home() {
@@ -52,6 +55,8 @@ export default function App() {
       <Route path="/admin/presences" element={<Admin><AdminPresences /></Admin>} />
       <Route path="/admin/notes" element={<Admin><AdminNotes /></Admin>} />
       <Route path="/admin/bulletins" element={<Admin><Bulletins /></Admin>} />
+      <Route path="/admin/horaire" element={<Admin><Horaire /></Admin>} />
+      <Route path="/admin/creneaux" element={<Admin><Creneaux /></Admin>} />
       <Route path="/admin/periodes" element={<Admin><Periodes /></Admin>} />
 
       {/* Teacher */}
@@ -76,6 +81,14 @@ export default function App() {
         element={
           <ProtectedRoute role="teacher">
             <TeacherNotes />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/enseignant/horaire"
+        element={
+          <ProtectedRoute role="teacher">
+            <HoraireTeacher />
           </ProtectedRoute>
         }
       />

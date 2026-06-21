@@ -439,6 +439,23 @@ table.b-grid tr.b-domaine td { background: #ddd; font-weight: 700; text-align: l
 table.b-grid tr.b-sous td { background: #f3f3f3; font-weight: 700; }
 table.b-grid tr.b-gen td { background: #e8e8e8; font-weight: 700; }
 
+/* ============================================================
+   Emploi du temps (horaire)
+   ============================================================ */
+.ht-table { width: 100%; border-collapse: collapse; table-layout: fixed; background: #fff; }
+.ht-table th, .ht-table td { border: 1px solid var(--gris-bord); padding: 4px 5px; font-size: 12px; vertical-align: top; }
+.ht-table th { background: var(--gris-fond); text-align: center; font-size: 12px; }
+.ht-time { width: 92px; background: var(--gris-fond); font-size: 11px; text-align: center; }
+.ht-time .lab { font-weight: 700; display: block; }
+.ht-pause td { background: #fff5d6; text-align: center; font-weight: 700; color: #9a6b00; }
+.ht-cell { cursor: pointer; min-height: 48px; }
+.ht-cell:hover { background: #eef6fc; }
+.ht-cell.filled { background: #e3f0fa; }
+.ht-cell .m { font-weight: 700; font-size: 11.5px; display: block; }
+.ht-cell .p { font-size: 10.5px; color: var(--texte-clair); }
+.ht-cell .s { font-size: 10px; color: var(--bleu-fonce); }
+.ht-empty { color: #b6c0cc; text-align: center; font-size: 16px; }
+
 table.b-grid tr.b-foot-row td { background: #fff; font-weight: 700; text-align: left; }
 .b-bottom { display: flex; gap: 12px; margin-top: 8px; font-size: 8px; }
 .b-decision { flex: 2; line-height: 1.55; }

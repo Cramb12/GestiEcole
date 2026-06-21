@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 const QUICK = [
   { label: 'Présences', to: '/enseignant/presences' },
   { label: 'Notes', to: '/enseignant/notes' },
+  { label: 'Mon horaire', to: '/enseignant/horaire' },
   { label: 'Bulletins' },
 ];
 
