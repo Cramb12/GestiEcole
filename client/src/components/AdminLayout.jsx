@@ -14,6 +14,7 @@ const LINKS = [
   { to: '/admin/presences', label: 'Présences' },
   { to: '/admin/notes', label: 'Notes' },
   { to: '/admin/bulletins', label: 'Bulletins' },
+  { to: '/admin/rapports', label: 'Rapports' },
   { to: '/admin/periodes', label: 'Périodes' },
 ];
 

@@ -19,7 +19,7 @@ const MENU = [
   { label: 'Présences', to: '/admin/presences' },
   { label: 'Notes', to: '/admin/notes' },
   { label: 'Bulletins', to: '/admin/bulletins' },
-  { label: 'Rapports', ready: false },
+  { label: 'Rapports', to: '/admin/rapports' },
 ];
 
 export default function AdminDashboard() {
