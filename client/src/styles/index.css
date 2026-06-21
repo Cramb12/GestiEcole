@@ -464,11 +464,38 @@ table.b-grid tr.b-foot-row td { background: #fff; font-weight: 700; text-align: 
 .bulletin-actions { margin: 0 0 14px; display: flex; gap: 10px; flex-wrap: wrap; }
 
 @media print {
+  /* Hide all app chrome visually; only #print-root (the bulletins) stays visible. */
   body * { visibility: hidden; }
   #print-root, #print-root * { visibility: visible; }
+
+  /* Remove the in-flow chrome from layout so it adds NO page height (this is
+     what was creating a near-blank 2nd sheet — the student table and toolbar
+     stayed in flow even while hidden). #print-root is positioned absolutely,
+     so once the chrome is gone only the bulletin defines the printed pages. */
+  .topbar, .admin-side, .toolbar, .table-wrap, .admin-h1, .admin-sub,
+  .alert-error, .alert-success, .locked-banner, .empty-state, .bulletin-actions {
+    display: none !important;
+  }
+  html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
+  .page, .admin-shell, .admin-content { margin: 0 !important; padding: 0 !important; }
+
   #print-root { position: absolute; left: 0; top: 0; width: 100%; }
-  .bulletin { box-shadow: none; border: none; margin: 0; page-break-after: always; }
-  .bulletin:last-child { page-break-after: auto; }
+
+  /* Each bulletin fills exactly one A4 page; the signature block is pinned to
+     the bottom so the sheet looks full instead of crammed at the top. */
+  .bulletin {
+    box-shadow: none; border: none; margin: 0 auto; padding: 6mm;
+    width: 198mm; min-height: 280mm; overflow: hidden;
+    display: flex; flex-direction: column;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .bulletin + .bulletin { page-break-before: always; }
+  .bulletin .b-bottom { margin-top: auto; }
+  /* Stretch the grid to fill the page height; rows grow evenly (official look)
+     and the signature block sits right under it instead of leaving a gap. */
+  table.b-grid { flex: 1 1 auto; }
+  table.b-grid td, table.b-grid th { padding-top: 1.4px; padding-bottom: 1.4px; vertical-align: middle; }
+
   @page { size: A4 portrait; margin: 6mm; }
 }
 
