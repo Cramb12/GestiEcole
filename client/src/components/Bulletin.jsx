@@ -4,6 +4,42 @@
 const fmt = (x) => (x === null || x === undefined ? '' : Number(x).toFixed(Number.isInteger(Number(x)) ? 0 : 1));
 const ord = (n) => (n === 1 ? '1ère' : `${n}ème`);
 
+// DRC flag (sky blue field, yellow-bordered red diagonal, yellow star).
+function Flag() {
+  return (
+    <svg viewBox="0 0 90 60" className="b-flag-svg" preserveAspectRatio="none">
+      <rect width="90" height="60" fill="#0086ce" />
+      <line x1="0" y1="60" x2="90" y2="0" stroke="#f7d116" strokeWidth="16" />
+      <line x1="0" y1="60" x2="90" y2="0" stroke="#ce1021" strokeWidth="10" />
+      <polygon points="16,6 17.57,10.84 22.66,10.84 18.54,13.83 20.12,18.66 16,15.67 11.88,18.66 13.46,13.83 9.34,10.84 14.43,10.84" fill="#f7d116" />
+    </svg>
+  );
+}
+
+// A row of small boxes (N° ID, Code, N° Perm), pre-filled from a value.
+function Cells({ value = '', count }) {
+  const chars = String(value || '').slice(0, count).split('');
+  return (
+    <span className="b-cells">
+      {Array.from({ length: count }).map((_, i) => <span className="b-cell" key={i}>{chars[i] || ''}</span>)}
+    </span>
+  );
+}
+
+// Official title line, built from the level/section/year.
+function makeTitle(d) {
+  const t = d.template;
+  const an = d.classe?.annee;
+  const sec = d.classe?.sections?.nom;
+  const ordA = an ? `${an === '1' ? '1ère' : an + 'ème'} ANNÉE ` : '';
+  if (t === 'humanites') return `BULLETIN DE LA ${ordA}HUMANITÉS${sec ? ' / ' + sec.toUpperCase() : ''}`;
+  if (t === 'cteb') return `BULLETIN DE LA ${ordA}CYCLE D'ORIENTATION`;
+  const m = { elementaire: "DEGRÉ ÉLÉMENTAIRE (1ère, 2ème ANNÉE)", moyen: "DEGRÉ MOYEN (3ème, 4ème ANNÉE)", terminal: "DEGRÉ TERMINAL (5ème, 6ème ANNÉE)" };
+  return `BULLETIN DE L'ÉLÈVE : ${m[t] || ''}`;
+}
+
+const ARMS_URL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Coat_of_arms_of_the_Democratic_Republic_of_the_Congo_%28grey_spear%29.svg/120px-Coat_of_arms_of_the_Democratic_Republic_of_the_Congo_%28grey_spear%29.svg.png';
+
 export default function Bulletin({ data }) {
   if (!data) return null;
   const { ecole, eleve, classe, system, ref, titre, periodes, domaines, totals, pourcentage, place, nbreEleves, appreciation, approuve } = data;
@@ -15,7 +51,6 @@ export default function Bulletin({ data }) {
   const colCount = 2 + periodes.length * perCols + 2 + (sec ? 2 : 0);
 
   const fullName = `${eleve.nom} ${eleve.postnom || ''} ${eleve.prenom || ''}`.replace(/\s+/g, ' ').trim();
-  const naissance = [eleve.lieu_naissance, eleve.date_naissance].filter(Boolean).join(' le ');
   const subLabels = (numero) => [`${ord(numero * 2 - 1)} P.`, `${ord(numero * 2)} P.`];
 
   const emptyPer = () => Array.from({ length: periodes.length * perCols }, (_, i) => <td key={'e' + i}></td>);
@@ -24,29 +59,38 @@ export default function Bulletin({ data }) {
     <div className="bulletin">
       {!approuve && <div className="b-watermark">PROVISOIRE</div>}
 
-      <div className="b-head">
-        <div className="b-pays">RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</div>
-        <div className="b-min">MINISTÈRE DE L'ÉDUCATION NATIONALE ET NOUVELLE CITOYENNETÉ</div>
-      </div>
-
-      <div className="b-meta">
-        <div className="b-box">
-          <div><b>Province Éducationnelle :</b> {ecole?.province || ''}</div>
-          <div><b>Ville :</b> {ecole?.ville || ''}</div>
-          <div><b>Commune / Terr. :</b> {ecole?.commune || ''}</div>
-          <div><b>École :</b> {ecole?.nom_ecole || ''}</div>
-          <div><b>Code :</b> {ecole?.code_ecole || ''}</div>
+      <div className="b-top">
+        <div className="b-flag"><Flag /></div>
+        <div className="b-titlecenter">
+          <div>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</div>
+          <div>MINISTÈRE DE L'ÉDUCATION NATIONALE</div>
+          <div>ET NOUVELLE CITOYENNETÉ</div>
         </div>
-        <div className="b-box">
-          <div><b>Élève :</b> {fullName}</div>
-          <div><b>Sexe :</b> {eleve.sexe || ''}</div>
-          <div><b>Né(e) à :</b> {naissance}</div>
-          <div><b>Classe :</b> {classe?.nom || ''}{classe?.sections ? ' / ' + classe.sections.nom : ''}</div>
-          <div><b>N° Perm. :</b> {eleve.numero_perm || ''}</div>
+        <div className="b-arms">
+          <img src={ARMS_URL} alt="" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
         </div>
       </div>
 
-      <div className="b-title">{titre} — ANNÉE SCOLAIRE {ecole?.annee_scolaire || ''}</div>
+      <div className="b-idrow"><span className="b-idlabel">N° ID.</span><Cells count={26} /></div>
+
+      <div className="b-province"><b>PROVINCE ÉDUCATIONNELLE :</b> {ecole?.province || ''}</div>
+
+      <div className="b-info">
+        <div className="b-info-left">
+          <div><b>VILLE :</b> {ecole?.ville || ''}</div>
+          <div><b>COMMUNE / TER. (1) :</b> {ecole?.commune || ''}</div>
+          <div><b>ÉCOLE :</b> {ecole?.nom_ecole || ''}</div>
+          <div className="b-line-cells"><b>CODE :</b> <Cells value={ecole?.code_ecole} count={10} /></div>
+        </div>
+        <div className="b-info-right">
+          <div><b>ÉLÈVE :</b> {fullName} &nbsp;&nbsp; <b>SEXE :</b> {eleve.sexe || ''}</div>
+          <div><b>NÉ(E) À :</b> {eleve.lieu_naissance || ''} &nbsp; <b>LE</b> {eleve.date_naissance || ''}</div>
+          <div><b>CLASSE :</b> {classe?.nom || ''}{classe?.sections ? ' / ' + classe.sections.nom : ''}</div>
+          <div className="b-line-cells"><b>N° PERM. :</b> <Cells value={eleve.numero_perm} count={13} /></div>
+        </div>
+      </div>
+
+      <div className="b-title">{makeTitle(data)} &nbsp; ANNÉE SCOLAIRE {ecole?.annee_scolaire || ''}</div>
 
       <table className="b-grid">
         <thead>
