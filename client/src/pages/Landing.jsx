@@ -31,6 +31,91 @@ function Icon({ name }) {
   return <svg {...common} aria-hidden="true">{paths[name]}</svg>;
 }
 
+// DRC flag — same construction as the real Bulletin component (sky blue field,
+// yellow-bordered red diagonal, yellow star).
+function MiniFlag() {
+  return (
+    <svg viewBox="0 0 90 60" className="lp-mb-flag" preserveAspectRatio="none" aria-hidden="true">
+      <rect width="90" height="60" fill="#0086ce" />
+      <line x1="0" y1="60" x2="90" y2="0" stroke="#f7d116" strokeWidth="16" />
+      <line x1="0" y1="60" x2="90" y2="0" stroke="#ce1021" strokeWidth="10" />
+      <polygon points="16,6 17.57,10.84 22.66,10.84 18.54,13.83 20.12,18.66 16,15.67 11.88,18.66 13.46,13.83 9.34,10.84 14.43,10.84" fill="#f7d116" />
+    </svg>
+  );
+}
+
+// Faithful, compact reproduction of a real DRC secondary (Humanités) bulletin —
+// semester system, per-period columns, domains, sous-totaux, official footer.
+// Static showcase data (Institut de la Réussite, demo school).
+function MiniBulletin() {
+  const SCIENCES = [
+    { n: 'Mathématiques', max: 40, p1: 8, p2: 8, ex: 16, tot: 32 },
+    { n: 'Physique', max: 40, p1: 7, p2: 8, ex: 16, tot: 31 },
+    { n: 'Chimie', max: 40, p1: 7, p2: 7, ex: 15, tot: 29 },
+    { n: 'Biologie', max: 40, p1: 7, p2: 8, ex: 15, tot: 30 },
+  ];
+  const LANGUES = [
+    { n: 'Français', max: 40, p1: 7, p2: 6, ex: 15, tot: 28 },
+    { n: 'Anglais', max: 40, p1: 6, p2: 7, ex: 15, tot: 28 },
+  ];
+  const Row = ({ c }) => (
+    <tr>
+      <td className="lp-mb-br">{c.n}</td>
+      <td>{c.max}</td><td>{c.p1}</td><td>{c.p2}</td><td>{c.ex}</td><td className="lp-mb-b">{c.tot}</td>
+    </tr>
+  );
+  return (
+    <div className="lp-mb">
+      <div className="lp-mb-top">
+        <MiniFlag />
+        <div className="lp-mb-ministry">
+          <div>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</div>
+          <div>MINISTÈRE DE L'ÉDUCATION NATIONALE</div>
+        </div>
+        <span className="lp-mb-arms">RDC</span>
+      </div>
+
+      <div className="lp-mb-id">
+        <span><b>ÉCOLE :</b> Institut de la Réussite</span>
+        <span><b>CLASSE :</b> 1ère Hum. Scientifique</span>
+      </div>
+      <div className="lp-mb-id">
+        <span><b>ÉLÈVE :</b> Chibalonza Mwendapeke</span>
+        <span><b>N° PERM. :</b> 0420</span>
+      </div>
+
+      <div className="lp-mb-title">BULLETIN — 1ère ANNÉE HUMANITÉS / SCIENTIFIQUE — 2025-2026</div>
+
+      <table className="lp-mb-grid">
+        <thead>
+          <tr>
+            <th rowSpan={2} className="lp-mb-br">BRANCHES</th>
+            <th colSpan={5}>1er SEMESTRE</th>
+          </tr>
+          <tr>
+            <th>MAX.</th><th>1ère P.</th><th>2è P.</th><th>EXAM.</th><th>TOTAL</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr className="lp-mb-dom"><td colSpan={6}>SCIENCES</td></tr>
+          {SCIENCES.map((c) => <Row c={c} key={c.n} />)}
+          <tr className="lp-mb-dom"><td colSpan={6}>LANGUES</td></tr>
+          {LANGUES.map((c) => <Row c={c} key={c.n} />)}
+          <tr className="lp-mb-gen">
+            <td className="lp-mb-br">MAXIMA GÉNÉRAUX</td>
+            <td>240</td><td></td><td></td><td></td><td className="lp-mb-b">178</td>
+          </tr>
+          <tr className="lp-mb-foot"><td className="lp-mb-br">POURCENTAGE</td><td colSpan={5}><b>74,2 %</b></td></tr>
+          <tr className="lp-mb-foot"><td className="lp-mb-br">PLACE / NBRE</td><td colSpan={5}>2 / 16</td></tr>
+          <tr className="lp-mb-foot"><td className="lp-mb-br">DÉCISION</td><td colSpan={5}><b>PASSE</b></td></tr>
+        </tbody>
+      </table>
+
+      <div className="lp-mb-ref">Réf. IGE/PS/059 — Bulletin officiel de l'enseignement secondaire</div>
+    </div>
+  );
+}
+
 const FEATURES = [
   { icon: 'bulletin', titre: 'Bulletins officiels automatiques', texte: 'Le bulletin au format MINEDUC se remplit et se calcule tout seul. Prêt à imprimer en PDF, primaire comme secondaire.' },
   { icon: 'calc', titre: 'Carnet de cotes intelligent', texte: 'Devoirs, interrogations et examens. Les moyennes, totaux et points sont calculés automatiquement, sans erreur.' },
@@ -78,24 +163,9 @@ export default function Landing() {
             </p>
           </div>
 
-          {/* Mini aperçu d'un bulletin (CSS pur) */}
+          {/* Aperçu fidèle d'un vrai bulletin de l'enseignement secondaire (Humanités) */}
           <div className="lp-hero-visual" aria-hidden="true">
-            <div className="lp-bulletin-card">
-              <div className="lp-bull-head">
-                <span className="lp-bull-flag" />
-                <div>
-                  <strong>BULLETIN SCOLAIRE</strong>
-                  <small>Année 2025-2026 — 1ère période</small>
-                </div>
-              </div>
-              <div className="lp-bull-rows">
-                {[['Mathématiques', '16,5'], ['Français', '14,0'], ['Physique', '15,2'], ['Biologie', '13,8']].map(([m, n]) => (
-                  <div className="lp-bull-row" key={m}><span>{m}</span><span>{n}</span></div>
-                ))}
-              </div>
-              <div className="lp-bull-total"><span>POURCENTAGE</span><span>74,3 %</span></div>
-              <div className="lp-bull-rank">Place : 2 / 16 — Application : Très bien</div>
-            </div>
+            <MiniBulletin />
           </div>
         </div>
       </section>
