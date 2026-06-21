@@ -26,6 +26,7 @@ const PRE_M = ['Patrick', 'Emmanuel', 'Daniel', 'Israel', 'Exauce', 'Jonathan', 
 const PRE_F = ['Esperance', 'Neema', 'Sarah', 'Divine', 'Rachel', 'Esther', 'Benedicte', 'Eunice', 'Faraja', 'Grace', 'Merveille', 'Aline'];
 
 let s = 12345;
+let permCounter = 1;
 const rnd = () => { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; };
 const pick = (a) => a[Math.floor(rnd() * a.length)];
 const ri = (lo, hi) => Math.floor(lo + rnd() * (hi - lo + 1));
@@ -121,7 +122,7 @@ async function main() {
     const rows = [];
     for (let i = 0; i < count; i++) {
       const f = rnd() > 0.5;
-      rows.push({ nom: pick(NOMS), postnom: pick(POST), prenom: f ? pick(PRE_F) : pick(PRE_M), sexe: f ? 'F' : 'M', date_naissance: `${prefix}-0${ri(1, 9)}-${ri(10, 28)}`, lieu_naissance: pick(['Bukavu', 'Goma', 'Uvira', 'Kabare']), numero_perm: null, classe_id: classe.id, annee_scolaire: ANNEE });
+      rows.push({ nom: pick(NOMS), postnom: pick(POST), prenom: f ? pick(PRE_F) : pick(PRE_M), sexe: f ? 'F' : 'M', date_naissance: `${prefix}-0${ri(1, 9)}-${ri(10, 28)}`, lieu_naissance: pick(['Bukavu', 'Goma', 'Uvira', 'Kabare']), numero_perm: `PROV-${prefix}-${String(permCounter++).padStart(4, '0')}`, classe_id: classe.id, annee_scolaire: ANNEE });
     }
     await db.from('eleves').insert(rows);
     return (await db.from('eleves').select('id').eq('classe_id', classe.id).eq('actif', true)).data;
@@ -138,9 +139,9 @@ async function main() {
       await db.from('enseignant_branches').upsert({ teacher_id: teacher.id, branche_id: br.id, classe_id: classe.id, annee_scolaire: ANNEE }, { onConflict: 'teacher_id,branche_id,classe_id,annee_scolaire' });
       const M = Number(br.max_points) || 10;
       for (const per of periodes) {
-        // skip if already graded
-        const { count: hasNotes } = await db.from('notes').select('id', { count: 'exact', head: true }).eq('classe_id', classe.id).eq('branche_id', br.id).eq('periode_id', per.id);
-        if (hasNotes > 0) continue;
+        // skip if already has evaluations (idempotent re-run)
+        const { count: hasEval } = await db.from('evaluations').select('id', { count: 'exact', head: true }).eq('classe_id', classe.id).eq('branche_id', br.id).eq('periode_id', per.id);
+        if (hasEval > 0) continue;
         // evaluations: devoir+interro P1, devoir P2, examen
         const evs = [];
         const mk = async (type, sp, date, max) => {
