@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GestiEcole — Brochure</title>
+<style>
+  :root{
+    --bleu:#0b6fb8; --bleu-fonce:#084c7d; --jaune:#f7c948; --rouge:#ce1126;
+    --gris:#f4f6f9; --bord:#dde4ec; --texte:#1f2937; --clair:#6b7280; --vert:#1c8a4d;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif; color:var(--texte); background:#e9edf2;}
+
+  /* Bouton imprimer (masqué à l'impression) */
+  .print-bar{position:fixed; top:14px; right:14px; z-index:50;}
+  .print-bar button{
+    background:var(--rouge); color:#fff; border:none; border-radius:8px;
+    padding:10px 18px; font-size:14px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,.2);
+  }
+
+  .page{
+    width:210mm; min-height:297mm; margin:18px auto; background:#fff;
+    box-shadow:0 8px 30px rgba(0,0,0,.18); display:flex; flex-direction:column;
+  }
+
+  /* En-tête */
+  .head{
+    background:linear-gradient(135deg,var(--bleu) 0%,var(--bleu-fonce) 100%);
+    color:#fff; padding:9mm 12mm; display:flex; align-items:center; justify-content:space-between; gap:10mm;
+  }
+  .brand{display:flex; align-items:center; gap:5mm;}
+  .brand .chip{
+    width:20mm; height:20mm; background:#fff; border-radius:5mm; padding:2mm;
+    display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(0,0,0,.18);
+  }
+  .brand .chip img{width:100%; height:100%; object-fit:contain;}
+  .brand h1{font-size:26px; font-weight:800; letter-spacing:-.3px;}
+  .brand p{font-size:12px; opacity:.92;}
+  .head-contact{text-align:right; font-size:12px; line-height:1.7;}
+  .head-contact b{display:block; font-size:14px;}
+
+  .body{padding:8mm 12mm; flex:1;}
+
+  .accroche{display:flex; gap:8mm; align-items:flex-start; margin-bottom:6mm;}
+  .accroche-text{flex:1.25;}
+  .eyebrow{
+    display:inline-block; background:#fff5d6; color:#8a6d00; border:1px solid #f0d98a;
+    font-size:11px; font-weight:700; padding:3px 10px; border-radius:14px; margin-bottom:3mm;
+  }
+  .accroche h2{font-size:23px; line-height:1.18; color:var(--bleu-fonce); margin-bottom:3mm;}
+  .accroche p{font-size:13.5px; color:#374151; line-height:1.5;}
+
+  /* Mini bulletin */
+  .mb{
+    flex:1; border:1px solid var(--bord); border-radius:4px; padding:3mm; font-size:8px; line-height:1.3;
+    box-shadow:0 4px 14px rgba(0,0,0,.1);
+  }
+  .mb-top{display:flex; align-items:center; gap:2mm; justify-content:space-between; margin-bottom:2mm;}
+  .mb-flag{width:9mm; height:6mm; border:1px solid var(--bord);}
+  .mb-min{text-align:center; font-size:7px; font-weight:700; color:var(--bleu-fonce); line-height:1.2;}
+  .mb-arms{width:6mm; height:6mm; border-radius:50%; background:var(--gris); border:1px solid var(--bord); display:flex; align-items:center; justify-content:center; font-size:6px; font-weight:800; color:var(--clair);}
+  .mb-id{display:flex; justify-content:space-between; font-size:8px; padding:.4mm 0;}
+  .mb-title{text-align:center; font-weight:800; font-size:7.5px; color:var(--bleu-fonce); background:var(--gris); border-radius:2px; padding:1mm; margin:1.5mm 0;}
+  table.mb-grid{width:100%; border-collapse:collapse; table-layout:fixed;}
+  .mb-grid th,.mb-grid td{border:1px solid #b9c2cc; padding:.6mm 1mm; text-align:center; font-size:7.5px;}
+  .mb-grid thead th{background:#eaf1f8; color:var(--bleu-fonce); font-weight:700;}
+  .mb-br{text-align:left !important; font-weight:600;}
+  .mb-b{font-weight:800; color:var(--bleu-fonce);}
+  .mb-dom td{background:#f0f3f6; font-weight:800; text-align:left; font-size:7px;}
+  .mb-gen td{background:#eef6ee; font-weight:800;}
+
+  /* Fonctionnalités */
+  .feat-title{font-size:15px; font-weight:800; color:var(--bleu-fonce); margin:5mm 0 3mm; border-bottom:2px solid var(--jaune); padding-bottom:1.5mm;}
+  .feats{display:grid; grid-template-columns:1fr 1fr; gap:2.5mm 8mm;}
+  .feat{display:flex; gap:2.5mm; font-size:12.5px; line-height:1.35;}
+  .feat .tick{
+    width:15px; height:15px; flex-shrink:0; margin-top:2px;
+    background:no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231c8a4d' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l4 4 10-11'/%3E%3C/svg%3E");
+  }
+  .feat b{color:var(--bleu-fonce);}
+
+  /* Tarif */
+  .price{
+    margin-top:6mm; background:linear-gradient(135deg,var(--bleu-fonce),#06304f); color:#fff;
+    border-radius:8px; padding:6mm 8mm; display:flex; align-items:center; justify-content:space-between; gap:8mm;
+  }
+  .price .big{font-size:34px; font-weight:800; line-height:1;}
+  .price .big span{font-size:15px; font-weight:600; opacity:.9;}
+  .price .detail{font-size:12.5px; line-height:1.6; text-align:right;}
+  .price .detail .ex{background:rgba(255,255,255,.15); border-radius:6px; padding:2mm 3mm; display:inline-block; margin-bottom:2mm; font-size:12px;}
+
+  /* Pied de page CTA */
+  .foot{
+    margin-top:auto; background:#07243a; color:#cdd9e4; padding:6mm 12mm;
+    display:flex; align-items:center; justify-content:space-between; gap:8mm;
+  }
+  .foot h3{color:#fff; font-size:16px; margin-bottom:1.5mm;}
+  .foot p{font-size:12px;}
+  .foot .contact{text-align:right; font-size:13px; line-height:1.7;}
+  .foot .contact b{color:var(--jaune);}
+  .wa{display:inline-block; background:#25d366; color:#06381b; font-weight:800; font-size:12.5px; padding:2.5mm 4mm; border-radius:6px; margin-top:2mm;}
+
+  @media print{
+    body{background:#fff;}
+    .print-bar{display:none;}
+    .page{margin:0; box-shadow:none; width:auto; min-height:auto;}
+    @page{size:A4; margin:0;}
+  }
+</style>
+</head>
+<body>
+  <div class="print-bar"><button onclick="window.print()">Imprimer / Enregistrer en PDF</button></div>
+
+  <div class="page">
+    <!-- En-tête -->
+    <header class="head">
+      <div class="brand">
+        <span class="chip"><img src="gestiecole.png" alt="GestiEcole" /></span>
+        <div>
+          <h1>GestiEcole</h1>
+          <p>Système de gestion scolaire — conforme aux normes MINEDUC</p>
+        </div>
+      </div>
+      <div class="head-contact">
+        <b>+243 973 184 702</b>
+        gesti.ecole@gmail.com<br />
+        Bukavu — Goma, RDC
+      </div>
+    </header>
+
+    <div class="body">
+      <!-- Accroche + aperçu bulletin -->
+      <section class="accroche">
+        <div class="accroche-text">
+          <span class="eyebrow">Conforme aux normes MINEDUC — RDC</span>
+          <h2>Les bulletins officiels de votre école, générés automatiquement.</h2>
+          <p>
+            GestiEcole gère les notes, les bulletins, le classement et les rapports de votre
+            établissement. Les enseignants saisissent les cotes : les moyennes, totaux et
+            pourcentages se calculent tout seuls. Plus de calculs à la main, plus d'erreurs,
+            plus de bulletins refaits chaque trimestre.
+          </p>
+        </div>
+
+        <div class="mb">
+          <div class="mb-top">
+            <svg class="mb-flag" viewBox="0 0 90 60" preserveAspectRatio="none">
+              <rect width="90" height="60" fill="#0086ce"/>
+              <line x1="0" y1="60" x2="90" y2="0" stroke="#f7d116" stroke-width="16"/>
+              <line x1="0" y1="60" x2="90" y2="0" stroke="#ce1021" stroke-width="10"/>
+              <polygon points="16,6 17.57,10.84 22.66,10.84 18.54,13.83 20.12,18.66 16,15.67 11.88,18.66 13.46,13.83 9.34,10.84 14.43,10.84" fill="#f7d116"/>
+            </svg>
+            <div class="mb-min">RÉPUBLIQUE DÉMOCRATIQUE DU CONGO<br/>MINISTÈRE DE L'ÉDUCATION NATIONALE</div>
+            <span class="mb-arms">RDC</span>
+          </div>
+          <div class="mb-id"><span><b>ÉCOLE :</b> Institut de la Réussite</span><span><b>CLASSE :</b> 1ère Hum. Scient.</span></div>
+          <div class="mb-id"><span><b>ÉLÈVE :</b> Chibalonza Mwendapeke</span><span><b>N° PERM. :</b> 0420</span></div>
+          <div class="mb-title">BULLETIN — 1ère ANNÉE HUMANITÉS / SCIENTIFIQUE — 2025-2026</div>
+          <table class="mb-grid">
+            <thead>
+              <tr><th rowspan="2" class="mb-br">BRANCHES</th><th colspan="5">1er SEMESTRE</th></tr>
+              <tr><th>MAX.</th><th>1ère P.</th><th>2è P.</th><th>EXAM.</th><th>TOTAL</th></tr>
+            </thead>
+            <tbody>
+              <tr class="mb-dom"><td colspan="6">SCIENCES</td></tr>
+              <tr><td class="mb-br">Mathématiques</td><td>40</td><td>8</td><td>8</td><td>16</td><td class="mb-b">32</td></tr>
+              <tr><td class="mb-br">Physique</td><td>40</td><td>7</td><td>8</td><td>16</td><td class="mb-b">31</td></tr>
+              <tr><td class="mb-br">Chimie</td><td>40</td><td>7</td><td>7</td><td>15</td><td class="mb-b">29</td></tr>
+              <tr><td class="mb-br">Biologie</td><td>40</td><td>7</td><td>8</td><td>15</td><td class="mb-b">30</td></tr>
+              <tr class="mb-dom"><td colspan="6">LANGUES</td></tr>
+              <tr><td class="mb-br">Français</td><td>40</td><td>7</td><td>6</td><td>15</td><td class="mb-b">28</td></tr>
+              <tr><td class="mb-br">Anglais</td><td>40</td><td>6</td><td>7</td><td>15</td><td class="mb-b">28</td></tr>
+              <tr class="mb-gen"><td class="mb-br">MAXIMA GÉNÉRAUX</td><td>240</td><td></td><td></td><td></td><td class="mb-b">178</td></tr>
+              <tr><td class="mb-br">POURCENTAGE</td><td colspan="5"><b>74,2 %</b> &nbsp; — &nbsp; Place : 2 / 16 &nbsp; — &nbsp; PASSE</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Fonctionnalités -->
+      <h3 class="feat-title">Tout ce dont votre école a besoin, dans une seule application</h3>
+      <div class="feats">
+        <div class="feat"><span class="tick"></span><span><b>Bulletins officiels MINEDUC</b> (primaire et secondaire), prêts à imprimer en PDF.</span></div>
+        <div class="feat"><span class="tick"></span><span><b>Carnet de cotes</b> : moyennes, totaux et pourcentages calculés automatiquement.</span></div>
+        <div class="feat"><span class="tick"></span><span><b>Classement</b> de la classe et <b>rapports</b> de l'école en un clic.</span></div>
+        <div class="feat"><span class="tick"></span><span><b>Élèves et enseignants</b> : chaque enseignant ne voit que ses classes.</span></div>
+        <div class="feat"><span class="tick"></span><span><b>Présences</b> : suivi des absences et des retards.</span></div>
+        <div class="feat"><span class="tick"></span><span><b>Emploi du temps</b> de l'école construit à partir des affectations.</span></div>
+        <div class="feat"><span class="tick"></span><span><b>Import Excel (CSV)</b> : ajoutez des classes entières d'élèves d'un coup.</span></div>
+        <div class="feat"><span class="tick"></span><span><b>Données sécurisées</b>, sauvegardées dans le cloud, accessibles partout.</span></div>
+      </div>
+
+      <!-- Tarif -->
+      <section class="price">
+        <div>
+          <div class="big">1 $ <span>/ élève / an</span></div>
+        </div>
+        <div class="detail">
+          <span class="ex">Exemple : une école de 300 élèves = 300 $ / an</span><br/>
+          Paiement par <b>mobile money</b> (Airtel Money, Orange Money, M-Pesa).<br/>
+          <b>Période d'essai gratuite</b> pour les écoles pilotes de Bukavu et Goma.
+        </div>
+      </section>
+    </div>
+
+    <!-- Pied de page / contact -->
+    <footer class="foot">
+      <div>
+        <h3>Demandez une démonstration gratuite</h3>
+        <p>Nous configurons votre école et formons vos enseignants. Mise en route en quelques jours.</p>
+        <a class="wa" href="https://wa.me/243973184702">Écrire sur WhatsApp : +243 973 184 702</a>
+      </div>
+      <div class="contact">
+        <b>+243 973 184 702</b><br/>
+        gesti.ecole@gmail.com<br/>
+        Bukavu — Goma<br/>
+        République Démocratique du Congo
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
