@@ -94,17 +94,20 @@ export async function buildBulletin(eleveId) {
     courses.sort((a, b) => (a.ordre - b.ordre) || a.nom.localeCompare(b.nom));
   }
 
-  // Group courses by domaine (keeping order), compute per-period cells + totals.
+  // Group courses by domaine. Track, per group and per period, the sum of
+  // obtained exams and totals, plus the sum of per-period maxima (M), so the
+  // bulletin can print the official Max / Examen / Total columns.
+  const newAgg = () => ({ perPeriode: pers.map(() => ({ exam: 0, total: 0 })), M: 0, annuel: 0, max: 0 });
   const domaines = [];
   let curDom = null;
-  const totals = { perPeriode: pers.map(() => 0), annuel: 0, max: 0 };
+  const totals = newAgg();
 
   for (const b of courses) {
     const M = Number(b.max_points) || 0;
     const mx = maxima(M);
     const domNom = b.domaine || 'AUTRES';
     if (!curDom || curDom.nom !== domNom) {
-      curDom = { nom: domNom, courses: [], sous: { perPeriode: pers.map(() => 0), annuel: 0, max: 0 } };
+      curDom = { nom: domNom, courses: [], sous: newAgg() };
       domaines.push(curDom);
     }
     const perPeriode = pers.map((p) => {
@@ -120,15 +123,16 @@ export async function buildBulletin(eleveId) {
     const annuelMax = mx.total * pers.length;
     const row = { nom: b.nom, sous_domaine: b.sous_domaine, M, mx, perPeriode, annuel, annuelMax };
     curDom.courses.push(row);
-    // accumulate
+    // accumulate obtained exam/total per period, plus M and annual.
     perPeriode.forEach((c, i) => {
-      curDom.sous.perPeriode[i] += Number(c.total) || 0;
-      totals.perPeriode[i] += Number(c.total) || 0;
+      curDom.sous.perPeriode[i].exam += Number(c.exam) || 0;
+      curDom.sous.perPeriode[i].total += Number(c.total) || 0;
+      totals.perPeriode[i].exam += Number(c.exam) || 0;
+      totals.perPeriode[i].total += Number(c.total) || 0;
     });
-    curDom.sous.annuel += annuel;
-    curDom.sous.max += annuelMax;
-    totals.annuel += annuel;
-    totals.max += annuelMax;
+    curDom.sous.M += M; totals.M += M;
+    curDom.sous.annuel += annuel; curDom.sous.max += annuelMax;
+    totals.annuel += annuel; totals.max += annuelMax;
   }
 
   const pourcentage = totals.max > 0 ? (totals.annuel / totals.max) * 100 : null;

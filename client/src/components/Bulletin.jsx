@@ -45,15 +45,14 @@ export default function Bulletin({ data }) {
   const { ecole, eleve, classe, system, ref, titre, periodes, domaines, totals, pourcentage, place, nbreEleves, appreciation, approuve } = data;
 
   const sec = system === 'semestre';
-  // Columns per period: subA, subB, Examen, Total.
-  const perCols = 4;
-  // BRANCHES + Max/p + periods*4 + TOTAL(2) + (repêchage 2 if secondary)
-  const colCount = 2 + periodes.length * perCols + 2 + (sec ? 2 : 0);
+  // 7 columns per period: MAX | 1ère P. | 2è P. | MAX.EXAM | EXAM | MAX.TOT | TOTAL
+  const perCols = 7;
+  // BRANCHES + periods*7 + TOTAL GÉNÉRAL(2) + (repêchage 2 if secondary)
+  const colCount = 1 + periodes.length * perCols + 2 + (sec ? 2 : 0);
 
   const fullName = `${eleve.nom} ${eleve.postnom || ''} ${eleve.prenom || ''}`.replace(/\s+/g, ' ').trim();
-  const subLabels = (numero) => [`${ord(numero * 2 - 1)} P.`, `${ord(numero * 2)} P.`];
-
-  const emptyPer = () => Array.from({ length: periodes.length * perCols }, (_, i) => <td key={'e' + i}></td>);
+  const pLabel = (n) => (n === 1 ? '1ère P.' : `${n}è P.`);
+  const subLabels = (numero) => [pLabel(numero * 2 - 1), pLabel(numero * 2)];
 
   return (
     <div className="bulletin">
@@ -95,28 +94,32 @@ export default function Bulletin({ data }) {
       <table className="b-grid">
         <thead>
           <tr>
-            <th rowSpan={2} style={{ width: '22%', textAlign: 'left' }}>BRANCHES</th>
-            <th rowSpan={2}>Max/p</th>
-            {periodes.map((p) => <th key={p.id} colSpan={perCols}>{p.nom}</th>)}
-            <th colSpan={2}>TOTAL</th>
+            <th rowSpan={3} style={{ width: '19%', textAlign: 'left' }}>BRANCHES</th>
+            {periodes.map((p) => <th key={p.id} colSpan={perCols}>{p.nom.toUpperCase()}</th>)}
+            <th colSpan={2} rowSpan={2}>TOTAL GÉNÉRAL</th>
             {sec && <th colSpan={2}>EXAMEN DE REPÊCHAGE</th>}
+          </tr>
+          <tr>
+            {periodes.map((p) => (
+              <>
+                <th key={p.id + 'm'} rowSpan={2}>MAX.</th>
+                <th key={p.id + 'tj'} colSpan={2}>TRAVAUX JOURNAL.</th>
+                <th key={p.id + 'me'} rowSpan={2}>MAX. EXAM.</th>
+                <th key={p.id + 'e'} rowSpan={2}>EXAM.</th>
+                <th key={p.id + 'mt'} rowSpan={2}>MAX. TOT.</th>
+                <th key={p.id + 't'} rowSpan={2}>TOTAL</th>
+              </>
+            ))}
+            {sec && <th rowSpan={2}>%</th>}
+            {sec && <th rowSpan={2}>Sign. Prof.</th>}
           </tr>
           <tr>
             {periodes.map((p) => {
               const [a, b] = subLabels(p.numero);
-              return (
-                <>
-                  <th key={p.id + '1'}>{a}</th>
-                  <th key={p.id + '2'}>{b}</th>
-                  <th key={p.id + '3'}>Ex.</th>
-                  <th key={p.id + '4'}>Tot.</th>
-                </>
-              );
+              return (<><th key={p.id + 'a'}>{a}</th><th key={p.id + 'b'}>{b}</th></>);
             })}
-            <th>Max</th>
-            <th>Pts</th>
-            {sec && <th>%</th>}
-            {sec && <th>Sign.</th>}
+            <th>Max.</th>
+            <th>Obt.</th>
           </tr>
         </thead>
         <tbody>
@@ -125,33 +128,38 @@ export default function Bulletin({ data }) {
               <tr className="b-domaine" key={`d${di}`}><td colSpan={colCount}>{dom.nom}</td></tr>
               {dom.courses.map((c, ci) => (
                 <tr key={`d${di}c${ci}`}>
-                  <td className="b-branche">{c.sous_domaine ? <i style={{ color: '#444' }}>{c.sous_domaine} · </i> : null}{c.nom}</td>
-                  <td>{c.M}</td>
+                  <td className="b-branche">{c.nom}</td>
                   {c.perPeriode.map((pp, pi) => (
                     <>
-                      <td key={pi + 'a'}>{fmt(pp.tj1)}</td>
-                      <td key={pi + 'b'}>{fmt(pp.tj2)}</td>
-                      <td key={pi + 'c'}>{fmt(pp.exam)}</td>
-                      <td key={pi + 'd'}><b>{fmt(pp.total)}</b></td>
+                      <td key={pi + 'm'}>{c.M}</td>
+                      <td key={pi + '1'}>{fmt(pp.tj1)}</td>
+                      <td key={pi + '2'}>{fmt(pp.tj2)}</td>
+                      <td key={pi + 'me'}>{c.mx.exam}</td>
+                      <td key={pi + 'e'}>{fmt(pp.exam)}</td>
+                      <td key={pi + 'mt'}>{c.mx.total}</td>
+                      <td key={pi + 't'}><b>{fmt(pp.total)}</b></td>
                     </>
                   ))}
                   <td>{c.annuelMax}</td>
                   <td><b>{fmt(c.annuel)}</b></td>
-                  {sec && <td></td>}
-                  {sec && <td></td>}
+                  {sec && <td></td>}{sec && <td></td>}
                 </tr>
               ))}
               <tr className="b-sous" key={`d${di}s`}>
-                <td className="b-branche">Sous-total</td>
-                <td></td>
-                {dom.sous.perPeriode.map((tot, pi) => (
+                <td className="b-branche">SOUS-TOTAL</td>
+                {dom.sous.perPeriode.map((agg, pi) => (
                   <>
-                    <td key={pi + 'a'}></td><td key={pi + 'b'}></td><td key={pi + 'c'}></td>
-                    <td key={pi + 'd'}>{fmt(tot)}</td>
+                    <td key={pi + 'm'}>{dom.sous.M}</td>
+                    <td key={pi + '1'}></td>
+                    <td key={pi + '2'}></td>
+                    <td key={pi + 'me'}>{2 * dom.sous.M}</td>
+                    <td key={pi + 'e'}>{fmt(agg.exam)}</td>
+                    <td key={pi + 'mt'}>{4 * dom.sous.M}</td>
+                    <td key={pi + 't'}><b>{fmt(agg.total)}</b></td>
                   </>
                 ))}
                 <td>{dom.sous.max}</td>
-                <td>{fmt(dom.sous.annuel)}</td>
+                <td><b>{fmt(dom.sous.annuel)}</b></td>
                 {sec && <td></td>}{sec && <td></td>}
               </tr>
             </>
@@ -159,11 +167,15 @@ export default function Bulletin({ data }) {
 
           <tr className="b-gen">
             <td className="b-branche">MAXIMA GÉNÉRAUX</td>
-            <td></td>
-            {totals.perPeriode.map((tot, pi) => (
+            {totals.perPeriode.map((agg, pi) => (
               <>
-                <td key={pi + 'a'}></td><td key={pi + 'b'}></td><td key={pi + 'c'}></td>
-                <td key={pi + 'd'}>{fmt(tot)}</td>
+                <td key={pi + 'm'}>{totals.M}</td>
+                <td key={pi + '1'}></td>
+                <td key={pi + '2'}></td>
+                <td key={pi + 'me'}>{2 * totals.M}</td>
+                <td key={pi + 'e'}>{fmt(agg.exam)}</td>
+                <td key={pi + 'mt'}>{4 * totals.M}</td>
+                <td key={pi + 't'}><b>{fmt(agg.total)}</b></td>
               </>
             ))}
             <td>{totals.max}</td>
@@ -172,24 +184,20 @@ export default function Bulletin({ data }) {
           </tr>
 
           <tr className="b-foot-row">
-            <td className="b-branche">POURCENTAGE</td><td></td>
-            {emptyPer()}
-            <td colSpan={2 + (sec ? 2 : 0)}><b>{pourcentage == null ? '' : pourcentage.toFixed(1) + ' %'}</b></td>
+            <td className="b-branche">POURCENTAGE</td>
+            <td colSpan={colCount - 1}><b>{pourcentage == null ? '' : pourcentage.toFixed(1) + ' %'}</b></td>
           </tr>
           <tr className="b-foot-row">
-            <td className="b-branche">PLACE / NBRE D'ÉLÈVES</td><td></td>
-            {emptyPer()}
-            <td colSpan={2 + (sec ? 2 : 0)}>{place ? `${place} / ${nbreEleves}` : ''}</td>
+            <td className="b-branche">PLACE / NBRE D'ÉLÈVES</td>
+            <td colSpan={colCount - 1}>{place ? `${place} / ${nbreEleves}` : ''}</td>
           </tr>
           <tr className="b-foot-row">
-            <td className="b-branche">APPLICATION</td><td></td>
-            {emptyPer()}
-            <td colSpan={2 + (sec ? 2 : 0)}>{appreciation?.application || ''}</td>
+            <td className="b-branche">APPLICATION</td>
+            <td colSpan={colCount - 1}>{appreciation?.application || ''}</td>
           </tr>
           <tr className="b-foot-row">
-            <td className="b-branche">CONDUITE</td><td></td>
-            {emptyPer()}
-            <td colSpan={2 + (sec ? 2 : 0)}>{appreciation?.conduite || ''}</td>
+            <td className="b-branche">CONDUITE</td>
+            <td colSpan={colCount - 1}>{appreciation?.conduite || ''}</td>
           </tr>
         </tbody>
       </table>
