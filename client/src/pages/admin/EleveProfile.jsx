@@ -129,13 +129,22 @@ export default function EleveProfile() {
             ) : (
               <div className="table-wrap">
                 <table className="data">
-                  <thead><tr><th>Période</th><th>Points obtenus</th><th>Maximum</th></tr></thead>
+                  <thead><tr><th>Période</th><th>Points obtenus</th><th>Maximum</th><th>%</th></tr></thead>
                   <tbody>
-                    {notes.map((n, i) => (
+                    {Object.values(
+                      notes.reduce((acc, n) => {
+                        const k = n.periodes?.nom || '—';
+                        acc[k] = acc[k] || { nom: k, obt: 0, max: 0 };
+                        acc[k].obt += Number(n.points_obtenus) || 0;
+                        acc[k].max += Number(n.max_periode) || 0;
+                        return acc;
+                      }, {})
+                    ).map((r, i) => (
                       <tr key={i}>
-                        <td>{n.periodes?.nom || '—'}</td>
-                        <td>{n.points_obtenus ?? '—'}</td>
-                        <td>{n.max_periode ?? '—'}</td>
+                        <td>{r.nom}</td>
+                        <td>{r.obt}</td>
+                        <td>{r.max}</td>
+                        <td>{r.max > 0 ? ((r.obt / r.max) * 100).toFixed(1) + ' %' : '—'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -144,10 +153,10 @@ export default function EleveProfile() {
             )}
           </div>
 
-          {/* Bulletin link (future) */}
+          {/* Bulletin link */}
           <div className="panel">
             <h3>Bulletin</h3>
-            <button className="btn btn-outline btn-sm" disabled title="Disponible en Phase 6">Voir le bulletin (Phase 6)</button>
+            <button className="btn btn-primary btn-sm" onClick={() => navigate(`/admin/eleves/${id}/bulletin`)}>Voir le bulletin</button>
           </div>
 
           {/* Promotion history */}

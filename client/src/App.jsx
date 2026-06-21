@@ -18,6 +18,7 @@ import TeacherPresences from './pages/teacher/Presences.jsx';
 import AdminNotes from './pages/admin/Notes.jsx';
 import TeacherNotes from './pages/teacher/Notes.jsx';
 import Bulletins from './pages/admin/Bulletins.jsx';
+import BulletinEleve from './pages/admin/BulletinEleve.jsx';
 
 // Sends a logged-in user to the correct home, or to /login otherwise.
 function Home() {
@@ -47,6 +48,7 @@ export default function App() {
       <Route path="/admin/enseignants" element={<Admin><Enseignants /></Admin>} />
       <Route path="/admin/eleves" element={<Admin><Eleves /></Admin>} />
       <Route path="/admin/eleves/:id" element={<Admin><EleveProfile /></Admin>} />
+      <Route path="/admin/eleves/:id/bulletin" element={<Admin><BulletinEleve /></Admin>} />
       <Route path="/admin/presences" element={<Admin><AdminPresences /></Admin>} />
       <Route path="/admin/notes" element={<Admin><AdminNotes /></Admin>} />
       <Route path="/admin/bulletins" element={<Admin><Bulletins /></Admin>} />
