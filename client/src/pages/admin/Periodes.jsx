@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase.js';
 import { useEcole } from '../../lib/useEcole.js';
 import { defaultPeriodes, subPeriodes } from '../../data/defaults.js';
+import { isLocked, GRACE_DAYS } from '../../lib/gradebook.js';
 import AdminLayout from '../../components/AdminLayout.jsx';
 import Modal from '../../components/Modal.jsx';
 
@@ -15,6 +16,26 @@ export default function Periodes() {
   const [msg, setMsg] = useState(null);
   const [modal, setModal] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [sous, setSous] = useState(null); // { periode, sps: [P1,P2] }
+
+  // Open the sub-periods (P1/P2) editor; create them if missing.
+  async function openSous(periode) {
+    setMsg(null);
+    let { data } = await supabase.from('sous_periodes').select('*').eq('periode_id', periode.id).order('numero');
+    if (!data || data.length < 2) {
+      const have = new Set((data || []).map((s) => s.numero));
+      const toCreate = [1, 2].filter((n) => !have.has(n)).map((n) => ({ periode_id: periode.id, numero: n }));
+      if (toCreate.length) await supabase.from('sous_periodes').insert(toCreate);
+      data = (await supabase.from('sous_periodes').select('*').eq('periode_id', periode.id).order('numero')).data;
+    }
+    setSous({ periode, sps: data || [] });
+  }
+
+  async function saveSous(sp, patch) {
+    const { error } = await supabase.from('sous_periodes').update(patch).eq('id', sp.id);
+    if (error) { setMsg({ type: 'error', text: error.message }); return; }
+    setSous((s) => ({ ...s, sps: s.sps.map((x) => (x.id === sp.id ? { ...x, ...patch } : x)) }));
+  }
 
   const niveau = niveaux.find((n) => n.id === niveauId);
 
@@ -193,6 +214,7 @@ export default function Periodes() {
                   </td>
                   <td>
                     <div className="row-actions">
+                      <button className="btn btn-outline btn-sm" onClick={() => openSous(p)}>Sous-périodes</button>
                       <button className="btn btn-secondary btn-sm" onClick={() => openEdit(p)}>Modifier</button>
                       <button className="btn btn-danger btn-sm" onClick={() => remove(p)}>Supprimer</button>
                     </div>
@@ -234,6 +256,48 @@ export default function Periodes() {
               <input className="input" type="date" value={modal.form.date_fin} onChange={(e) => setModal({ ...modal, form: { ...modal.form, date_fin: e.target.value } })} />
             </div>
           </div>
+        </Modal>
+      )}
+
+      {sous && (
+        <Modal
+          title={`Sous-périodes — ${sous.periode.nom}`}
+          onClose={() => setSous(null)}
+          footer={<button className="btn btn-primary" onClick={() => setSous(null)}>Fermer</button>}
+        >
+          {msg && msg.type === 'error' && <div className="alert-error">{msg.text}</div>}
+          <p className="admin-sub" style={{ marginTop: 0 }}>
+            Les travaux journaliers sont rangés en P1 ou P2 selon leur date. Verrouillage automatique {GRACE_DAYS} jours après la date de fin ; vous pouvez proclamer plus tôt ou rouvrir.
+          </p>
+          {sous.sps.map((sp) => {
+            const locked = isLocked(sp);
+            return (
+              <div className="panel" key={sp.id} style={{ padding: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <strong>{sp.numero === 1 ? '1ère période (P1)' : '2ème période (P2)'}</strong>
+                  <span className={'pill ' + (locked ? 'pill-red' : 'pill-green')}>{locked ? 'Verrouillée' : 'Ouverte'}</span>
+                </div>
+                <div className="form-grid">
+                  <div>
+                    <label className="lbl">Début</label>
+                    <input className="input" type="date" value={sp.date_debut || ''} onChange={(e) => saveSous(sp, { date_debut: e.target.value || null })} />
+                  </div>
+                  <div>
+                    <label className="lbl">Fin</label>
+                    <input className="input" type="date" value={sp.date_fin || ''} onChange={(e) => saveSous(sp, { date_fin: e.target.value || null })} />
+                  </div>
+                  <div>
+                    <label className="lbl">Statut</label>
+                    <select className="input" value={sp.statut} onChange={(e) => saveSous(sp, { statut: e.target.value })}>
+                      <option value="auto">Automatique (verrou à la date + {GRACE_DAYS}j)</option>
+                      <option value="proclamee">Proclamée (verrouillée maintenant)</option>
+                      <option value="ouverte">Ouverte (forcée)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </Modal>
       )}
     </AdminLayout>
