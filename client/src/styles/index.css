@@ -263,6 +263,20 @@ button { cursor: pointer; font-family: inherit; }
 .admin-h1 { font-size: 22px; margin-bottom: 4px; }
 .admin-sub { color: var(--texte-clair); margin-bottom: 18px; font-size: 14px; }
 
+/* Trial / subscription banner (multi-tenant) */
+.sub-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  padding: 11px 16px; border-radius: var(--radius); margin-bottom: 16px;
+  font-size: 14px; font-weight: 600;
+}
+.sub-banner.info { background: #fff7e0; color: #8a6d00; border: 1px solid #f3d98a; }
+.sub-banner.expired { background: #fde8ea; color: var(--rouge); border: 1px solid #f5c2c7; }
+.sub-banner a {
+  flex-shrink: 0; text-decoration: none; font-weight: 800; font-size: 13px;
+  padding: 7px 13px; border-radius: 8px; background: #25d366; color: #06381b;
+}
+.sub-banner.info a { background: var(--jaune); color: var(--bleu-fonce); }
+
 .toolbar {
   display: flex;
   align-items: center;
@@ -482,7 +496,8 @@ table.b-grid tr.b-foot-row td { background: #fff; font-weight: 700; text-align: 
      stayed in flow even while hidden). #print-root is positioned absolutely,
      so once the chrome is gone only the bulletin defines the printed pages. */
   .topbar, .admin-side, .toolbar, .table-wrap, .admin-h1, .admin-sub,
-  .alert-error, .alert-success, .locked-banner, .empty-state, .bulletin-actions {
+  .alert-error, .alert-success, .locked-banner, .empty-state, .bulletin-actions,
+  .sub-banner {
     display: none !important;
   }
   html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
