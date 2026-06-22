@@ -56,7 +56,8 @@ export default function Configuration() {
     setUploading(true);
     try {
       const ext = file.name.split('.').pop();
-      const path = `logo-${Date.now()}.${ext}`;
+      // Namespace logos per school so tenants never collide / overwrite.
+      const path = `${ecoleId || 'tmp'}/logo-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from('ecole')
         .upload(path, file, { upsert: true });

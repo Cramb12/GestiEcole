@@ -36,14 +36,30 @@ Deno.serve(async (req) => {
     const { data: userData, error: userErr } = await supabase.auth.getUser(token);
     if (userErr || !userData.user) return json(401, { message: 'Non authentifié.' });
 
-    // 2. Verify the caller is a super_admin.
+    // 2. Verify the caller is a super_admin and find their school (tenant).
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, ecole_id')
       .eq('id', userData.user.id)
       .maybeSingle();
     if (profile?.role !== 'super_admin') {
       return json(403, { message: "Accès réservé à l'administrateur." });
+    }
+    if (!profile.ecole_id) {
+      return json(400, { message: "Votre compte n'est rattaché à aucune école." });
+    }
+
+    // 2b. Block writes when the trial has expired (school is read-only).
+    const { data: ecole } = await supabase
+      .from('ecole')
+      .select('statut, essai_fin')
+      .eq('id', profile.ecole_id)
+      .maybeSingle();
+    const today = new Date().toISOString().slice(0, 10);
+    const active = !!ecole && (ecole.statut === 'actif'
+      || (ecole.statut === 'essai' && (!ecole.essai_fin || ecole.essai_fin >= today)));
+    if (!active) {
+      return json(403, { message: "Période d'essai expirée. Activez votre abonnement pour ajouter des comptes." });
     }
 
     // 3. Validate the payload.
@@ -63,13 +79,14 @@ Deno.serve(async (req) => {
     });
     if (createErr) return json(400, { message: createErr.message });
 
-    // 5. Create the matching profile (role = teacher).
+    // 5. Create the matching profile (role = teacher, same school as the admin).
     const { error: profErr } = await supabase.from('profiles').insert({
       id: created.user.id,
       nom,
       postnom: postnom || null,
       email,
       role: 'teacher',
+      ecole_id: profile.ecole_id,
     });
     if (profErr) {
       // Roll back the auth user if the profile insert failed.

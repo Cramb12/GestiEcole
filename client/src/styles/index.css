@@ -113,6 +113,15 @@ button { cursor: pointer; font-family: inherit; }
   line-height: 1.7;
 }
 
+/* Signup form (Inscription) */
+.signup-section {
+  font-weight: 700; color: var(--bleu-fonce); font-size: 14px;
+  margin: 18px 0 10px; padding-bottom: 5px; border-bottom: 2px solid var(--jaune);
+}
+.signup-row { display: flex; gap: 12px; }
+.signup-row .field { flex: 1; }
+@media (max-width: 520px) { .signup-row { flex-direction: column; gap: 0; } }
+
 /* ---------- Layout (topbar) ---------- */
 .topbar {
   background: var(--bleu);

@@ -4,6 +4,7 @@ import { useAuth } from './context/AuthContext.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Login from './pages/Login.jsx';
 import Landing from './pages/Landing.jsx';
+import Inscription from './pages/Inscription.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import TeacherDashboard from './pages/TeacherDashboard.jsx';
 import Configuration from './pages/admin/Configuration.jsx';
@@ -43,6 +44,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/inscription" element={<Inscription />} />
 
       {/* Super Admin */}
       <Route path="/admin" element={<Admin><AdminDashboard /></Admin>} />

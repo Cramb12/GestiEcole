@@ -148,8 +148,8 @@ export default function Landing() {
             <span>GestiEcole</span>
           </div>
           <div className="lp-nav-actions">
-            <a href={waLink} target="_blank" rel="noopener noreferrer" className="lp-nav-link">Nous contacter</a>
-            <Link to="/login?demo=1" className="btn lp-btn-light">Voir la démo</Link>
+            <Link to="/login?demo=1" className="lp-nav-link">Voir la démo</Link>
+            <Link to="/inscription" className="btn lp-btn-light">Essai gratuit</Link>
           </div>
         </div>
       </header>
@@ -165,11 +165,11 @@ export default function Landing() {
               Plus de calculs manuels. Plus d'erreurs. Plus de bulletins refaits à la main.
             </p>
             <div className="lp-hero-cta">
-              <Link to="/login?demo=1" className="btn lp-btn-primary">Voir la démo en direct</Link>
-              <a href={waLink} target="_blank" rel="noopener noreferrer" className="btn lp-btn-outline"><WaIcon /> Demander une présentation</a>
+              <Link to="/inscription" className="btn lp-btn-primary">Essai gratuit 30 jours</Link>
+              <Link to="/login?demo=1" className="btn lp-btn-outline">Voir la démo en direct</Link>
             </div>
             <p className="lp-hero-note">
-              Conçu pour les écoles primaires et secondaires de Bukavu, Goma et de tout l'Est de la RDC.
+              Sans engagement, sans carte bancaire. Conçu pour les écoles primaires et secondaires de Bukavu, Goma et de tout l'Est de la RDC.
             </p>
           </div>
 
@@ -239,7 +239,10 @@ export default function Landing() {
           Abonnement annuel par établissement, adapté à la taille de votre école. Paiement par mobile money
           (Airtel Money, Orange Money, M-Pesa). Premières écoles pilotes à Bukavu et Goma : conditions spéciales.
         </p>
-        <a href={waLink} target="_blank" rel="noopener noreferrer" className="btn lp-btn-primary"><WaIcon /> Demander un devis</a>
+        <div className="lp-hero-cta" style={{ justifyContent: 'center' }}>
+          <Link to="/inscription" className="btn lp-btn-primary">Commencer l'essai gratuit</Link>
+          <a href={waLink} target="_blank" rel="noopener noreferrer" className="btn lp-btn-outline" style={{ color: 'var(--bleu-fonce)', borderColor: 'var(--gris-bord)' }}><WaIcon /> Demander un devis</a>
+        </div>
       </section>
 
       {/* ---- Pied de page / contact ---- */}
