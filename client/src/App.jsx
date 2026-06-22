@@ -25,6 +25,7 @@ import Rapports from './pages/admin/Rapports.jsx';
 import BulletinEleve from './pages/admin/BulletinEleve.jsx';
 import Horaire from './pages/admin/Horaire.jsx';
 import Creneaux from './pages/admin/Creneaux.jsx';
+import Frais from './pages/admin/Frais.jsx';
 import HoraireTeacher from './pages/teacher/Horaire.jsx';
 
 // Public landing for visitors; logged-in users go straight to their dashboard.
@@ -66,6 +67,7 @@ export default function App() {
       <Route path="/admin/horaire" element={<Admin><Horaire /></Admin>} />
       <Route path="/admin/creneaux" element={<Admin><Creneaux /></Admin>} />
       <Route path="/admin/periodes" element={<Admin><Periodes /></Admin>} />
+      <Route path="/admin/frais" element={<Admin><Frais /></Admin>} />
 
       {/* Teacher */}
       <Route
