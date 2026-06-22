@@ -27,6 +27,7 @@ import Horaire from './pages/admin/Horaire.jsx';
 import Creneaux from './pages/admin/Creneaux.jsx';
 import Frais from './pages/admin/Frais.jsx';
 import Encaisser from './pages/percepteur/Encaisser.jsx';
+import RapportsFinances from './pages/percepteur/Rapports.jsx';
 import HoraireTeacher from './pages/teacher/Horaire.jsx';
 
 // Public landing for visitors; logged-in users go straight to their dashboard.
@@ -52,6 +53,7 @@ export default function App() {
       <Route path="/inscription" element={<Inscription />} />
       <Route path="/vendeur" element={<ProtectedRoute owner><Vendeur /></ProtectedRoute>} />
       <Route path="/percepteur" element={<ProtectedRoute role={['percepteur', 'super_admin']}><Encaisser /></ProtectedRoute>} />
+      <Route path="/percepteur/rapports" element={<ProtectedRoute role={['percepteur', 'super_admin']}><RapportsFinances /></ProtectedRoute>} />
 
       {/* Super Admin */}
       <Route path="/admin" element={<Admin><AdminDashboard /></Admin>} />
