@@ -26,6 +26,7 @@ import BulletinEleve from './pages/admin/BulletinEleve.jsx';
 import Horaire from './pages/admin/Horaire.jsx';
 import Creneaux from './pages/admin/Creneaux.jsx';
 import Frais from './pages/admin/Frais.jsx';
+import Encaisser from './pages/percepteur/Encaisser.jsx';
 import HoraireTeacher from './pages/teacher/Horaire.jsx';
 
 // Public landing for visitors; logged-in users go straight to their dashboard.
@@ -34,6 +35,7 @@ function Home() {
   if (loading) return <div className="center-screen">Chargement…</div>;
   if (!user) return <Landing />;
   if (user.isOwner) return <Navigate to="/vendeur" replace />;
+  if (user.role === 'percepteur') return <Navigate to="/percepteur" replace />;
   return <Navigate to={user.role === 'super_admin' ? '/admin' : '/enseignant'} replace />;
 }
 
@@ -49,6 +51,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/inscription" element={<Inscription />} />
       <Route path="/vendeur" element={<ProtectedRoute owner><Vendeur /></ProtectedRoute>} />
+      <Route path="/percepteur" element={<ProtectedRoute role={['percepteur', 'super_admin']}><Encaisser /></ProtectedRoute>} />
 
       {/* Super Admin */}
       <Route path="/admin" element={<Admin><AdminDashboard /></Admin>} />

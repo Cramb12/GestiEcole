@@ -349,6 +349,34 @@ table.data tr:hover td { background: #fafbfc; }
 .card-box { background: #fff; border: 1px solid var(--gris-bord); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 20px; box-shadow: var(--ombre); }
 .card-title { font-size: 16px; color: var(--bleu-fonce); margin-bottom: 14px; }
 
+/* Espace percepteur */
+.pl-nav { display: flex; gap: 4px; border-bottom: 2px solid var(--gris-bord); margin-bottom: 18px; flex-wrap: wrap; }
+.pl-link { padding: 10px 16px; text-decoration: none; font-weight: 600; font-size: 14.5px; color: var(--texte-clair); border-bottom: 3px solid transparent; margin-bottom: -2px; }
+.pl-link:hover { color: var(--bleu); }
+.pl-link.active { color: var(--bleu-fonce); border-bottom-color: var(--bleu); }
+
+.finance-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 16px; }
+.finance-summary > div { background: #fff; border: 1px solid var(--gris-bord); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--ombre); }
+.finance-summary span { display: block; font-size: 13px; color: var(--texte-clair); }
+.finance-summary strong { font-size: 22px; font-weight: 800; color: var(--bleu-fonce); }
+.finance-summary strong.ok { color: #1c7c43; }
+.finance-summary strong.due { color: var(--rouge); }
+td.ok { color: #1c7c43; font-weight: 600; }
+td.due { color: var(--rouge); font-weight: 600; }
+
+/* Reçu de paiement */
+.recu { max-width: 150mm; margin: 16px auto; background: #fff; border: 1px solid #999; padding: 8mm; color: #000; font-family: 'Times New Roman', Georgia, serif; box-shadow: var(--ombre); }
+.recu-head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #000; padding-bottom: 6px; }
+.recu-head strong { font-size: 15px; }
+.recu-sub { font-size: 11px; color: #333; }
+.recu-no { font-size: 12px; font-weight: 700; white-space: nowrap; }
+.recu-title { text-align: center; font-weight: 700; font-size: 14px; letter-spacing: 1px; margin: 10px 0; }
+.recu-grid { width: 100%; border-collapse: collapse; font-size: 13px; }
+.recu-grid td { padding: 5px 6px; border-bottom: 1px dotted #999; }
+.recu-grid td:first-child { width: 35%; color: #444; }
+.recu-foot { display: flex; justify-content: space-between; margin-top: 22px; font-size: 12px; }
+.recu-sign { text-align: center; border-top: 1px solid #000; padding-top: 4px; min-width: 45mm; }
+
 /* ---------- Toggle (lock) ---------- */
 .toggle { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; font-weight: 600; }
 .toggle input { display: none; }
@@ -506,7 +534,7 @@ table.b-grid tr.b-foot-row td { background: #fff; font-weight: 700; text-align: 
      so once the chrome is gone only the bulletin defines the printed pages. */
   .topbar, .admin-side, .toolbar, .table-wrap, .admin-h1, .admin-sub,
   .alert-error, .alert-success, .locked-banner, .empty-state, .bulletin-actions,
-  .sub-banner {
+  .sub-banner, .no-print, .pl-nav {
     display: none !important;
   }
   html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }

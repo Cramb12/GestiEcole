@@ -13,16 +13,19 @@ export default function ProtectedRoute({ children, role, owner }) {
     return <Navigate to="/login" replace />;
   }
 
-  const home = user.isOwner ? '/vendeur' : user.role === 'super_admin' ? '/admin' : '/enseignant';
+  const home = user.isOwner ? '/vendeur'
+    : user.role === 'super_admin' ? '/admin'
+    : user.role === 'percepteur' ? '/percepteur'
+    : '/enseignant';
 
   // Platform-owner-only route.
   if (owner && !user.isOwner) {
     return <Navigate to={home} replace />;
   }
 
-  // If a specific role is required and the user doesn't have it,
-  // send them to their own dashboard.
-  if (role && user.role !== role) {
+  // If specific role(s) are required and the user doesn't match, send them home.
+  const roleOk = !role || (Array.isArray(role) ? role.includes(user.role) : user.role === role);
+  if (!roleOk) {
     return <Navigate to={home} replace />;
   }
 
