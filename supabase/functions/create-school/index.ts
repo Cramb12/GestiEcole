@@ -91,6 +91,11 @@ Deno.serve(async (req) => {
       return json(400, { message: profErr.message });
     }
 
+    // 4. Install the standard DRC structure (levels, periods, time slots) so the
+    // school can create classes right away. Non-fatal if it fails.
+    const { error: provErr } = await supabase.rpc('provision_school_structure', { eid: ecoleId });
+    if (provErr) console.error('provision_school_structure', provErr.message);
+
     return json(200, { ecole_id: ecoleId, essai_fin: essaiFin });
   } catch (e) {
     return json(500, { message: String(e?.message || e) });
