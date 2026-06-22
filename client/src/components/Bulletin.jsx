@@ -44,6 +44,8 @@ export default function Bulletin({ data }) {
   if (!data) return null;
   const { ecole, eleve, classe, system, ref, titre, periodes, domaines, totals, periodeStats, pourcentage, place, nbreEleves, appreciation, approuve } = data;
   const pStats = periodeStats || periodes.map((p) => ({ id: p.id, pct: null, place: null, nbre: 0 }));
+  const pc = (v) => (v == null ? '' : v.toFixed(1) + '%');           // compact percentage
+  const pl = (p, n) => (p ? `${p}/${n}` : '');                        // compact place
 
   const sec = system === 'semestre';
   // 7 columns per period: MAX | 1ère P. | 2è P. | MAX.EXAM | EXAM | MAX.TOT | TOTAL
@@ -184,21 +186,37 @@ export default function Bulletin({ data }) {
             {sec && <td></td>}{sec && <td></td>}
           </tr>
 
+          {/* Percentage per sub-column: P1, P2, Exam and the period total. */}
           <tr className="b-foot-row">
             <td className="b-branche">POURCENTAGE</td>
-            {pStats.map((s, i) => (
-              <td key={`pct${i}`} colSpan={perCols}><b>{s.pct == null ? '' : s.pct.toFixed(1) + ' %'}</b></td>
-            ))}
-            <td colSpan={2}><b>{pourcentage == null ? '' : pourcentage.toFixed(1) + ' %'}</b></td>
-            {sec && <td colSpan={2}></td>}
+            {pStats.flatMap((s, i) => [
+              <td key={`%${i}m`}></td>,
+              <td key={`%${i}1`}><b>{pc(s.pctP1)}</b></td>,
+              <td key={`%${i}2`}><b>{pc(s.pctP2)}</b></td>,
+              <td key={`%${i}me`}></td>,
+              <td key={`%${i}e`}><b>{pc(s.pctExam)}</b></td>,
+              <td key={`%${i}mt`}></td>,
+              <td key={`%${i}t`}><b>{pc(s.pct)}</b></td>,
+            ])}
+            <td></td>
+            <td><b>{pc(pourcentage)}</b></td>
+            {sec && <td></td>}{sec && <td></td>}
           </tr>
+          {/* Place (rank) for the three proclamations: P1, P2 and the period total. */}
           <tr className="b-foot-row">
             <td className="b-branche">PLACE / NBRE D'ÉLÈVES</td>
-            {pStats.map((s, i) => (
-              <td key={`pl${i}`} colSpan={perCols}>{s.place ? `${s.place} / ${s.nbre}` : ''}</td>
-            ))}
-            <td colSpan={2}>{place ? `${place} / ${nbreEleves}` : ''}</td>
-            {sec && <td colSpan={2}></td>}
+            {pStats.flatMap((s, i) => [
+              <td key={`pl${i}m`}></td>,
+              <td key={`pl${i}1`}>{pl(s.placeP1, s.nbre)}</td>,
+              <td key={`pl${i}2`}>{pl(s.placeP2, s.nbre)}</td>,
+              <td key={`pl${i}me`}></td>,
+              <td key={`pl${i}e`}></td>,
+              <td key={`pl${i}mt`}></td>,
+              <td key={`pl${i}t`}>{pl(s.place, s.nbre)}</td>,
+            ])}
+            <td></td>
+            <td>{pl(place, nbreEleves)}</td>
+            {sec && <td></td>}{sec && <td></td>}
           </tr>
           <tr className="b-foot-row">
             <td className="b-branche">APPLICATION</td>

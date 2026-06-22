@@ -30,47 +30,51 @@ async function loadCourses(classe) {
   return (data || []).filter((b) => brancheApplies(b.annee, classe.annee));
 }
 
-// Rank students within a class from an aggregate map {eleveId: {obt, max}}.
-// Ties share the same place (e.g. two firsts -> next is 3rd).
-function rankFrom(aggMap) {
-  const list = Object.entries(aggMap).map(([id, a]) => ({ id, pct: a.max > 0 ? (a.obt / a.max) * 100 : 0 }));
-  list.sort((a, b) => b.pct - a.pct);
+// Rank students by a raw obtained-score map {eleveId: score}. The maximum is the
+// same for every student (same curriculum), so ranking by the obtained sum is
+// equivalent to ranking by percentage. Ties share a place (two firsts -> 3rd).
+function rankByScore(scoreMap) {
+  const list = Object.entries(scoreMap).map(([id, v]) => ({ id, v }));
+  list.sort((a, b) => b.v - a.v);
   const place = {};
-  let lastPct = null, lastPlace = 0;
+  let lastV = null, lastPlace = 0;
   list.forEach((it, i) => {
-    if (lastPct === null || it.pct !== lastPct) { lastPlace = i + 1; lastPct = it.pct; }
+    if (lastV === null || it.v !== lastV) { lastPlace = i + 1; lastV = it.v; }
     place[it.id] = lastPlace;
   });
   return { place, nbre: list.length };
 }
 
-// Compute the class ranking PER PERIOD (each proclaimed period has its own
-// percentage and place) plus the annual ranking (computed at year-end).
+// Each period has THREE proclamations (P1, P2, and the period total), each with
+// its own class ranking. Plus the annual ranking, computed at year-end.
 async function classStats(classeId, pers) {
   const periodeIds = pers.map((p) => p.id);
   const { data: notes } = await supabase
     .from('notes')
-    .select('eleve_id, periode_id, points_obtenus, max_periode')
+    .select('eleve_id, periode_id, points_journaliers_1, points_journaliers_2, points_obtenus')
     .eq('classe_id', classeId)
     .in('periode_id', periodeIds.length ? periodeIds : ['00000000-0000-0000-0000-000000000000']);
 
-  const perAgg = {};                 // periodeId -> { eleveId -> {obt, max} }
-  const annualAgg = {};              // eleveId -> {obt, max}
-  pers.forEach((p) => (perAgg[p.id] = {}));
+  const per = {};                    // periodeId -> { p1, p2, tot: {eleve -> sum}, any }
+  const annual = {};                 // eleveId -> sum of points_obtenus
+  pers.forEach((p) => (per[p.id] = { p1: {}, p2: {}, tot: {}, any: false }));
+  const add = (m, k, v) => { if (v != null) m[k] = (m[k] || 0) + Number(v); };
   (notes || []).forEach((n) => {
-    if (n.points_obtenus == null) return;
-    const o = Number(n.points_obtenus), m = Number(n.max_periode) || 0;
-    const pp = perAgg[n.periode_id];
-    if (pp) { (pp[n.eleve_id] = pp[n.eleve_id] || { obt: 0, max: 0 }); pp[n.eleve_id].obt += o; pp[n.eleve_id].max += m; }
-    (annualAgg[n.eleve_id] = annualAgg[n.eleve_id] || { obt: 0, max: 0 });
-    annualAgg[n.eleve_id].obt += o; annualAgg[n.eleve_id].max += m;
+    const blk = per[n.periode_id];
+    if (!blk) return;
+    if (n.points_journaliers_1 != null || n.points_journaliers_2 != null || n.points_obtenus != null) blk.any = true;
+    add(blk.p1, n.eleve_id, n.points_journaliers_1);
+    add(blk.p2, n.eleve_id, n.points_journaliers_2);
+    add(blk.tot, n.eleve_id, n.points_obtenus);
+    add(annual, n.eleve_id, n.points_obtenus);
   });
 
   const perPeriode = {};
   pers.forEach((p) => {
-    perPeriode[p.id] = { ...rankFrom(perAgg[p.id]), hasData: Object.keys(perAgg[p.id]).length > 0 };
+    const b = per[p.id];
+    perPeriode[p.id] = { p1: rankByScore(b.p1), p2: rankByScore(b.p2), tot: rankByScore(b.tot), hasData: b.any };
   });
-  return { perPeriode, annual: rankFrom(annualAgg) };
+  return { perPeriode, annual: rankByScore(annual) };
 }
 
 export async function buildBulletin(eleveId) {
@@ -115,7 +119,7 @@ export async function buildBulletin(eleveId) {
   // Group courses by domaine. Track, per group and per period, the sum of
   // obtained exams and totals, plus the sum of per-period maxima (M), so the
   // bulletin can print the official Max / Examen / Total columns.
-  const newAgg = () => ({ perPeriode: pers.map(() => ({ exam: 0, total: 0 })), M: 0, annuel: 0, max: 0 });
+  const newAgg = () => ({ perPeriode: pers.map(() => ({ tj1: 0, tj2: 0, exam: 0, total: 0 })), M: 0, annuel: 0, max: 0 });
   const domaines = [];
   let curDom = null;
   const totals = newAgg();
@@ -143,8 +147,12 @@ export async function buildBulletin(eleveId) {
     curDom.courses.push(row);
     // accumulate obtained exam/total per period, plus M and annual.
     perPeriode.forEach((c, i) => {
+      curDom.sous.perPeriode[i].tj1 += Number(c.tj1) || 0;
+      curDom.sous.perPeriode[i].tj2 += Number(c.tj2) || 0;
       curDom.sous.perPeriode[i].exam += Number(c.exam) || 0;
       curDom.sous.perPeriode[i].total += Number(c.total) || 0;
+      totals.perPeriode[i].tj1 += Number(c.tj1) || 0;
+      totals.perPeriode[i].tj2 += Number(c.tj2) || 0;
       totals.perPeriode[i].exam += Number(c.exam) || 0;
       totals.perPeriode[i].total += Number(c.total) || 0;
     });
@@ -153,16 +161,26 @@ export async function buildBulletin(eleveId) {
     totals.annuel += annuel; totals.max += annuelMax;
   }
 
-  // Per-period and annual class statistics.
+  // Per-period and annual class statistics. Each period yields a % for P1, P2,
+  // the exam, and the period total, plus a place (rank) for P1, P2 and the total
+  // (the three proclamations).
   const stats = await classStats(classe.id, pers);
-  const perPeriodeMax = 4 * totals.M;   // total max per period across all subjects
+  const Msum = totals.M;                 // sum of per-period maxima (M) over subjects
   const periodeStats = pers.map((p, i) => {
-    const has = !!stats.perPeriode[p.id]?.hasData && perPeriodeMax > 0;
+    const st = stats.perPeriode[p.id];
+    const has = !!st?.hasData && Msum > 0;
+    const agg = totals.perPeriode[i];
+    const pctOf = (val, max) => (has && max > 0 ? (val / max) * 100 : null);
     return {
       id: p.id,
-      pct: has ? (totals.perPeriode[i].total / perPeriodeMax) * 100 : null,
-      place: has ? (stats.perPeriode[p.id].place[eleveId] || null) : null,
-      nbre: stats.perPeriode[p.id]?.nbre || 0,
+      nbre: st?.tot?.nbre || 0,
+      pctP1: pctOf(agg.tj1, Msum),
+      pctP2: pctOf(agg.tj2, Msum),
+      pctExam: pctOf(agg.exam, 2 * Msum),
+      pct: pctOf(agg.total, 4 * Msum),                          // period total %
+      placeP1: has ? (st.p1.place[eleveId] || null) : null,
+      placeP2: has ? (st.p2.place[eleveId] || null) : null,
+      place: has ? (st.tot.place[eleveId] || null) : null,      // period total place
     };
   });
 
