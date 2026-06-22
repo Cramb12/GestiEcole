@@ -95,7 +95,8 @@ export default function Login() {
         <div className="login-hint">
           Comptes de démonstration :<br />
           Direction → <strong>directeur@ecole.cd</strong> / admin123<br />
-          Enseignant → <strong>demo.kalala@ecole.cd</strong> / demo2025
+          Enseignant → <strong>demo.kalala@ecole.cd</strong> / demo2025<br />
+          Percepteur → <strong>demo.percepteur@ecole.cd</strong> / demo2025
           <br />
           Pas encore de compte ? <Link to="/inscription" style={{ color: 'var(--bleu)', fontWeight: 600 }}>Créer mon école (essai gratuit)</Link>
           <br />

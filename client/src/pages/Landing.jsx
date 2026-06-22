@@ -226,6 +226,7 @@ export default function Landing() {
             <div className="lp-demo-creds">
               <div><span>Direction</span><strong>directeur@ecole.cd</strong><em>admin123</em></div>
               <div><span>Enseignant</span><strong>demo.kalala@ecole.cd</strong><em>demo2025</em></div>
+              <div><span>Percepteur</span><strong>demo.percepteur@ecole.cd</strong><em>demo2025</em></div>
             </div>
             <Link to="/login?demo=1" className="btn lp-btn-primary" style={{ width: '100%' }}>Ouvrir la démo</Link>
           </div>
