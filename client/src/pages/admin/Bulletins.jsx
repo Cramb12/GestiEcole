@@ -75,6 +75,15 @@ export default function Bulletins() {
 
   function print() {
     if (preview.length === 0) { setMsg({ type: 'error', text: "Affichez d'abord un bulletin." }); return; }
+    // Single-student print is blocked when the school requires payment and the
+    // student isn't up to date. Whole-class prints proceed (debtors are stamped).
+    if (preview.length === 1) {
+      const p = preview[0].paiement;
+      if (p?.exige && !p.enRegle) {
+        setMsg({ type: 'error', text: `Élève non en règle de paiement (solde dû : ${Number(p.resteUSD).toFixed(2)} $). Impression bloquée.` });
+        return;
+      }
+    }
     window.print();
   }
 

@@ -464,6 +464,17 @@ td.due { color: var(--rouge); font-weight: 600; }
 }
 .bulletin > * { position: relative; z-index: 1; }
 
+/* Cachet de paiement (lien bulletin <-> perceptions) */
+.b-paystamp {
+  position: absolute; top: 7mm; right: 7mm; z-index: 3;
+  border: 2px solid; border-radius: 6px; padding: 4px 10px;
+  font-weight: 800; font-size: 10.5px; text-align: center; line-height: 1.2;
+  transform: rotate(-7deg); letter-spacing: 0.5px;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+.b-paystamp.ok { color: #1c7c43; border-color: #1c7c43; }
+.b-paystamp.due { color: var(--rouge); border-color: var(--rouge); }
+
 /* En-tête officiel */
 .b-top { display: flex; align-items: center; gap: 8px; }
 .b-flag { width: 70px; flex: none; }

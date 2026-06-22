@@ -42,7 +42,7 @@ const ARMS_URL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Coat
 
 export default function Bulletin({ data }) {
   if (!data) return null;
-  const { ecole, eleve, classe, system, ref, titre, periodes, domaines, totals, periodeStats, pourcentage, place, nbreEleves, appreciation, approuve } = data;
+  const { ecole, eleve, classe, system, ref, titre, periodes, domaines, totals, periodeStats, pourcentage, place, nbreEleves, appreciation, approuve, paiement } = data;
   const pStats = periodeStats || periodes.map((p) => ({ id: p.id, pct: null, place: null, nbre: 0 }));
   const pc = (v) => (v == null ? '' : v.toFixed(1) + '%');           // compact percentage
   const pl = (p, n) => (p ? `${p}/${n}` : '');                        // compact place
@@ -60,6 +60,11 @@ export default function Bulletin({ data }) {
   return (
     <div className="bulletin">
       {!approuve && <div className="b-watermark">PROVISOIRE</div>}
+      {paiement?.exige && (
+        <div className={`b-paystamp ${paiement.enRegle ? 'ok' : 'due'}`}>
+          {paiement.enRegle ? 'EN RÈGLE' : <>NON EN RÈGLE<br />Solde : {Number(paiement.resteUSD).toFixed(2)} $</>}
+        </div>
+      )}
 
       <div className="b-top">
         <div className="b-flag"><Flag /></div>

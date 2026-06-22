@@ -27,6 +27,15 @@ export default function BulletinEleve() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  function doPrint() {
+    const p = data?.paiement;
+    if (p?.exige && !p.enRegle) {
+      setMsg({ type: 'error', text: `Élève non en règle de paiement (solde dû : ${Number(p.resteUSD).toFixed(2)} $). Impression du bulletin bloquée.` });
+      return;
+    }
+    window.print();
+  }
+
   async function setApproval(value) {
     const lp = data?.periodes?.[data.periodes.length - 1];
     if (!lp) { setMsg({ type: 'error', text: 'Aucune période définie pour ce niveau.' }); return; }
@@ -46,7 +55,7 @@ export default function BulletinEleve() {
         {data && (data.approuve
           ? <button className="btn btn-danger btn-sm" onClick={() => setApproval(false)}>Retirer la validation</button>
           : <button className="btn btn-outline btn-sm" onClick={() => setApproval(true)}>Approuver</button>)}
-        <button className="btn btn-primary btn-sm" onClick={() => window.print()} disabled={!data}>Imprimer / PDF</button>
+        <button className="btn btn-primary btn-sm" onClick={doPrint} disabled={!data}>Imprimer / PDF</button>
       </div>
 
       {msg && <div className={msg.type === 'success' ? 'alert-success' : 'alert-error'}>{msg.text}</div>}

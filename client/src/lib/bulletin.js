@@ -1,6 +1,7 @@
 // Builds all the data needed to render a student's bulletin.
 import { supabase } from './supabase.js';
 import { maxima, brancheApplies } from './notes.js';
+import { feeSituation, feeApplies } from './frais.js';
 
 // Official form references per template.
 export const REF = {
@@ -197,11 +198,25 @@ export async function buildBulletin(eleveId) {
     .order('created_at', { ascending: false });
   const appreciation = (appr && appr[0]) || null;
 
+  // Payment standing (only when the school requires it for bulletins).
+  let paiement = { exige: false, enRegle: true, resteUSD: 0 };
+  if (ecole?.bulletin_exige_paiement) {
+    const [{ data: fraisAll }, { data: reds }, { data: pays }] = await Promise.all([
+      supabase.from('frais').select('*').eq('actif', true),
+      supabase.from('frais_reductions').select('*').eq('eleve_id', eleveId),
+      supabase.from('paiements').select('*').eq('eleve_id', eleveId).eq('annule', false),
+    ]);
+    const applicable = (fraisAll || []).filter((f) => feeApplies(f, classe.niveau_id));
+    const sit = feeSituation(applicable, reds, pays, ecole.taux_fc_usd);
+    paiement = { exige: true, enRegle: sit.totalResteUSD <= 0.01, resteUSD: sit.totalResteUSD };
+  }
+
   return {
     ecole, eleve, classe, niveau, template, system,
     ref: REF[template] || '', titre: TITRE[template] || "BULLETIN DE L'ÉLÈVE",
     periodes: pers, domaines, totals, periodeStats, pourcentage,
     place, nbreEleves: nbre,
     appreciation, approuve: !!appreciation?.signe_directeur,
+    paiement,
   };
 }
