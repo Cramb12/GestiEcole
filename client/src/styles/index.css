@@ -339,6 +339,7 @@ table.data tr:hover td { background: #fafbfc; }
 .pill-green { background: #e4f6ea; color: #1c7c43; }
 .pill-gray { background: var(--gris-fond); color: var(--texte-clair); }
 .pill-red { background: #fde8ea; color: var(--rouge); }
+.pill-yellow { background: #fff7e0; color: #8a6d00; }
 
 /* ---------- Toggle (lock) ---------- */
 .toggle { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; font-weight: 600; }

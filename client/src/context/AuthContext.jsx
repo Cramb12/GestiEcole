@@ -17,7 +17,7 @@ export function AuthProvider({ children }) {
     }
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id, nom, postnom, role')
+      .select('id, nom, postnom, role, is_platform_owner')
       .eq('id', authUser.id)
       .maybeSingle();
 
@@ -27,6 +27,7 @@ export function AuthProvider({ children }) {
       nom: profile?.nom || authUser.email,
       postnom: profile?.postnom || '',
       role: profile?.role || 'teacher',
+      isOwner: !!profile?.is_platform_owner,
     });
   }
 
@@ -52,10 +53,10 @@ export function AuthProvider({ children }) {
     // Return the freshly loaded role so the caller can redirect.
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, is_platform_owner')
       .eq('id', data.user.id)
       .maybeSingle();
-    return { id: data.user.id, role: profile?.role || 'teacher' };
+    return { id: data.user.id, role: profile?.role || 'teacher', isOwner: !!profile?.is_platform_owner };
   }
 
   async function logout() {

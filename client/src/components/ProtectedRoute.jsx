@@ -2,7 +2,7 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 
-export default function ProtectedRoute({ children, role }) {
+export default function ProtectedRoute({ children, role, owner }) {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -13,10 +13,16 @@ export default function ProtectedRoute({ children, role }) {
     return <Navigate to="/login" replace />;
   }
 
+  const home = user.isOwner ? '/vendeur' : user.role === 'super_admin' ? '/admin' : '/enseignant';
+
+  // Platform-owner-only route.
+  if (owner && !user.isOwner) {
+    return <Navigate to={home} replace />;
+  }
+
   // If a specific role is required and the user doesn't have it,
   // send them to their own dashboard.
   if (role && user.role !== role) {
-    const home = user.role === 'super_admin' ? '/admin' : '/enseignant';
     return <Navigate to={home} replace />;
   }
 

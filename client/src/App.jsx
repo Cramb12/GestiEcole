@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Login from './pages/Login.jsx';
 import Landing from './pages/Landing.jsx';
 import Inscription from './pages/Inscription.jsx';
+import Vendeur from './pages/Vendeur.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import TeacherDashboard from './pages/TeacherDashboard.jsx';
 import Configuration from './pages/admin/Configuration.jsx';
@@ -31,6 +32,7 @@ function Home() {
   const { user, loading } = useAuth();
   if (loading) return <div className="center-screen">Chargement…</div>;
   if (!user) return <Landing />;
+  if (user.isOwner) return <Navigate to="/vendeur" replace />;
   return <Navigate to={user.role === 'super_admin' ? '/admin' : '/enseignant'} replace />;
 }
 
@@ -45,6 +47,7 @@ export default function App() {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/inscription" element={<Inscription />} />
+      <Route path="/vendeur" element={<ProtectedRoute owner><Vendeur /></ProtectedRoute>} />
 
       {/* Super Admin */}
       <Route path="/admin" element={<Admin><AdminDashboard /></Admin>} />

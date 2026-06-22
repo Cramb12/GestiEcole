@@ -30,7 +30,7 @@ export default function Login() {
     setLoading(true);
     try {
       const user = await login(email.trim(), password);
-      navigate(user.role === 'super_admin' ? '/admin' : '/enseignant', { replace: true });
+      navigate(user.isOwner ? '/vendeur' : user.role === 'super_admin' ? '/admin' : '/enseignant', { replace: true });
     } catch (err) {
       // Map common Supabase Auth errors to French messages.
       const raw = (err?.message || '').toLowerCase();
