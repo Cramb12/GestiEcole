@@ -84,7 +84,7 @@ async function main() {
 
   // Matières depuis les programmes officiels
   async function loadMatieres(niveauId, sectionId, prog) {
-    const { data: existing } = await db.from('branches').select('id, nom').eq('niveau_id', niveauId);
+    const { data: existing } = await db.from('branches').select('id, nom, max_points').eq('niveau_id', niveauId);
     if (existing && existing.length >= prog.courses.length) return existing;
     const rows = prog.courses.map((c, i) => ({ nom: c.nom, domaine: c.domaine || null, sous_domaine: c.sous || null, max_points: c.max, niveau_id: niveauId, section_id: sectionId, annee: prog.annee, ordre: i + 1 }));
     await db.from('branches').insert(rows);
@@ -172,10 +172,10 @@ async function main() {
       }
     }
   }
-  console.log('  … calcul des notes (peut prendre ~1 min)');
-  await gradeClass(classeMoyen, brMoyen, [perMoyen[0]], elMoyen);
-  await gradeClass(classeSci, brSci, [perSci[0]], elSci);
-  console.log('  ✔ Affectations + évaluations + notes (1ère période)');
+  console.log('  … calcul des notes pour toutes les périodes (peut prendre ~1-2 min)');
+  await gradeClass(classeMoyen, brMoyen, perMoyen, elMoyen);   // 3 trimestres
+  await gradeClass(classeSci, brSci, perSci, elSci);           // 2 semestres
+  console.log('  ✔ Affectations + évaluations + notes (toutes les périodes)');
 
   // Présences (quelques absences/retards)
   async function seedPresences(classe, students) {
