@@ -30,21 +30,10 @@ async function loadCourses(classe) {
   return (data || []).filter((b) => brancheApplies(b.annee, classe.annee));
 }
 
-// Compute each active student's annual percentage to derive the place.
-async function classRanking(classeId, periodeIds) {
-  const { data: notes } = await supabase
-    .from('notes')
-    .select('eleve_id, points_obtenus, max_periode')
-    .eq('classe_id', classeId)
-    .in('periode_id', periodeIds);
-  const agg = {};
-  (notes || []).forEach((n) => {
-    if (n.points_obtenus == null) return;
-    (agg[n.eleve_id] = agg[n.eleve_id] || { obt: 0, max: 0 });
-    agg[n.eleve_id].obt += Number(n.points_obtenus);
-    agg[n.eleve_id].max += Number(n.max_periode) || 0;
-  });
-  const list = Object.entries(agg).map(([id, a]) => ({ id, pct: a.max > 0 ? (a.obt / a.max) * 100 : 0 }));
+// Rank students within a class from an aggregate map {eleveId: {obt, max}}.
+// Ties share the same place (e.g. two firsts -> next is 3rd).
+function rankFrom(aggMap) {
+  const list = Object.entries(aggMap).map(([id, a]) => ({ id, pct: a.max > 0 ? (a.obt / a.max) * 100 : 0 }));
   list.sort((a, b) => b.pct - a.pct);
   const place = {};
   let lastPct = null, lastPlace = 0;
@@ -53,6 +42,35 @@ async function classRanking(classeId, periodeIds) {
     place[it.id] = lastPlace;
   });
   return { place, nbre: list.length };
+}
+
+// Compute the class ranking PER PERIOD (each proclaimed period has its own
+// percentage and place) plus the annual ranking (computed at year-end).
+async function classStats(classeId, pers) {
+  const periodeIds = pers.map((p) => p.id);
+  const { data: notes } = await supabase
+    .from('notes')
+    .select('eleve_id, periode_id, points_obtenus, max_periode')
+    .eq('classe_id', classeId)
+    .in('periode_id', periodeIds.length ? periodeIds : ['00000000-0000-0000-0000-000000000000']);
+
+  const perAgg = {};                 // periodeId -> { eleveId -> {obt, max} }
+  const annualAgg = {};              // eleveId -> {obt, max}
+  pers.forEach((p) => (perAgg[p.id] = {}));
+  (notes || []).forEach((n) => {
+    if (n.points_obtenus == null) return;
+    const o = Number(n.points_obtenus), m = Number(n.max_periode) || 0;
+    const pp = perAgg[n.periode_id];
+    if (pp) { (pp[n.eleve_id] = pp[n.eleve_id] || { obt: 0, max: 0 }); pp[n.eleve_id].obt += o; pp[n.eleve_id].max += m; }
+    (annualAgg[n.eleve_id] = annualAgg[n.eleve_id] || { obt: 0, max: 0 });
+    annualAgg[n.eleve_id].obt += o; annualAgg[n.eleve_id].max += m;
+  });
+
+  const perPeriode = {};
+  pers.forEach((p) => {
+    perPeriode[p.id] = { ...rankFrom(perAgg[p.id]), hasData: Object.keys(perAgg[p.id]).length > 0 };
+  });
+  return { perPeriode, annual: rankFrom(annualAgg) };
 }
 
 export async function buildBulletin(eleveId) {
@@ -135,8 +153,24 @@ export async function buildBulletin(eleveId) {
     totals.annuel += annuel; totals.max += annuelMax;
   }
 
-  const pourcentage = totals.max > 0 ? (totals.annuel / totals.max) * 100 : null;
-  const { place, nbre } = await classRanking(classe.id, periodeIds);
+  // Per-period and annual class statistics.
+  const stats = await classStats(classe.id, pers);
+  const perPeriodeMax = 4 * totals.M;   // total max per period across all subjects
+  const periodeStats = pers.map((p, i) => {
+    const has = !!stats.perPeriode[p.id]?.hasData && perPeriodeMax > 0;
+    return {
+      id: p.id,
+      pct: has ? (totals.perPeriode[i].total / perPeriodeMax) * 100 : null,
+      place: has ? (stats.perPeriode[p.id].place[eleveId] || null) : null,
+      nbre: stats.perPeriode[p.id]?.nbre || 0,
+    };
+  });
+
+  // The annual total is only meaningful once every period has been graded.
+  const allGraded = pers.length > 0 && pers.every((p) => stats.perPeriode[p.id]?.hasData);
+  const pourcentage = allGraded && totals.max > 0 ? (totals.annuel / totals.max) * 100 : null;
+  const place = allGraded ? (stats.annual.place[eleveId] || null) : null;
+  const nbre = stats.annual.nbre;
 
   const { data: appr } = await supabase
     .from('appreciation')
@@ -148,8 +182,8 @@ export async function buildBulletin(eleveId) {
   return {
     ecole, eleve, classe, niveau, template, system,
     ref: REF[template] || '', titre: TITRE[template] || "BULLETIN DE L'ÉLÈVE",
-    periodes: pers, domaines, totals, pourcentage,
-    place: place[eleveId] || null, nbreEleves: nbre,
+    periodes: pers, domaines, totals, periodeStats, pourcentage,
+    place, nbreEleves: nbre,
     appreciation, approuve: !!appreciation?.signe_directeur,
   };
 }

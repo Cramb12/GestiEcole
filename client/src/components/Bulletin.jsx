@@ -42,7 +42,8 @@ const ARMS_URL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Coat
 
 export default function Bulletin({ data }) {
   if (!data) return null;
-  const { ecole, eleve, classe, system, ref, titre, periodes, domaines, totals, pourcentage, place, nbreEleves, appreciation, approuve } = data;
+  const { ecole, eleve, classe, system, ref, titre, periodes, domaines, totals, periodeStats, pourcentage, place, nbreEleves, appreciation, approuve } = data;
+  const pStats = periodeStats || periodes.map((p) => ({ id: p.id, pct: null, place: null, nbre: 0 }));
 
   const sec = system === 'semestre';
   // 7 columns per period: MAX | 1ère P. | 2è P. | MAX.EXAM | EXAM | MAX.TOT | TOTAL
@@ -185,11 +186,19 @@ export default function Bulletin({ data }) {
 
           <tr className="b-foot-row">
             <td className="b-branche">POURCENTAGE</td>
-            <td colSpan={colCount - 1}><b>{pourcentage == null ? '' : pourcentage.toFixed(1) + ' %'}</b></td>
+            {pStats.map((s, i) => (
+              <td key={`pct${i}`} colSpan={perCols}><b>{s.pct == null ? '' : s.pct.toFixed(1) + ' %'}</b></td>
+            ))}
+            <td colSpan={2}><b>{pourcentage == null ? '' : pourcentage.toFixed(1) + ' %'}</b></td>
+            {sec && <td colSpan={2}></td>}
           </tr>
           <tr className="b-foot-row">
             <td className="b-branche">PLACE / NBRE D'ÉLÈVES</td>
-            <td colSpan={colCount - 1}>{place ? `${place} / ${nbreEleves}` : ''}</td>
+            {pStats.map((s, i) => (
+              <td key={`pl${i}`} colSpan={perCols}>{s.place ? `${s.place} / ${s.nbre}` : ''}</td>
+            ))}
+            <td colSpan={2}>{place ? `${place} / ${nbreEleves}` : ''}</td>
+            {sec && <td colSpan={2}></td>}
           </tr>
           <tr className="b-foot-row">
             <td className="b-branche">APPLICATION</td>
