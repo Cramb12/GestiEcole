@@ -1,6 +1,53 @@
 // Public landing page — commercial showcase for school directors (Bukavu/Goma).
 // Lives at "/" for non-authenticated visitors. French UI, no emojis.
 import { Link } from 'react-router-dom';
+import Bulletin from '../components/Bulletin.jsx';
+
+// A complete, realistic sample bulletin (the real Bulletin component) for the
+// hero — same layout the app produces.
+const SAMPLE_BULLETIN = (() => {
+  const M = 10;
+  const mk = (nom, s1, s2) => {
+    const mx = { tj1: M, tj2: M, exam: 2 * M, total: 4 * M };
+    const perPeriode = [s1, s2].map(([a, b, e]) => ({ tj1: a, tj2: b, exam: e, total: a + b + e }));
+    const annuel = perPeriode.reduce((s, c) => s + c.total, 0);
+    return { nom, M, mx, perPeriode, annuel, annuelMax: mx.total * 2 };
+  };
+  const DOMS = [
+    ['DOMAINE DES SCIENCES', [mk('Mathématiques', [8, 8, 15], [8, 9, 16]), mk('Physique', [7, 8, 15], [8, 8, 15]), mk('Chimie', [7, 7, 14], [7, 8, 15]), mk('Biologie', [8, 7, 15], [7, 8, 14])]],
+    ['DOMAINE DES LANGUES', [mk('Français', [7, 7, 14], [8, 7, 15]), mk('Anglais', [6, 7, 13], [7, 7, 14])]],
+    ["DOMAINE DE L'UNIVERS SOCIAL", [mk('Histoire', [7, 6, 14], [7, 7, 13]), mk('Géographie', [8, 7, 15], [7, 8, 14])]],
+    ['DOMAINE DU DÉVELOPPEMENT PERSONNEL', [mk('Éducation physique', [8, 8, 16], [9, 8, 17])]],
+  ];
+  const blank = () => [{ tj1: 0, tj2: 0, exam: 0, total: 0 }, { tj1: 0, tj2: 0, exam: 0, total: 0 }];
+  const accum = (dst, c) => { dst.M += c.M; dst.annuel += c.annuel; dst.max += c.annuelMax; c.perPeriode.forEach((p, i) => { dst.perPeriode[i].tj1 += p.tj1; dst.perPeriode[i].tj2 += p.tj2; dst.perPeriode[i].exam += p.exam; dst.perPeriode[i].total += p.total; }); };
+  const totals = { M: 0, annuel: 0, max: 0, perPeriode: blank() };
+  const domaines = DOMS.map(([nom, courses]) => {
+    const sous = { M: 0, annuel: 0, max: 0, perPeriode: blank() };
+    courses.forEach((c) => { accum(sous, c); accum(totals, c); });
+    return { nom, courses, sous };
+  });
+  const periodes = [{ id: 's1', numero: 1, nom: '1er Semestre' }, { id: 's2', numero: 2, nom: '2ème Semestre' }];
+  const periodeStats = periodes.map((p, i) => {
+    const a = totals.perPeriode[i];
+    return {
+      id: p.id, nbre: 32,
+      pctP1: (a.tj1 / totals.M) * 100, pctP2: (a.tj2 / totals.M) * 100,
+      pctExam: (a.exam / (2 * totals.M)) * 100, pct: (a.total / (4 * totals.M)) * 100,
+      placeP1: i === 0 ? 4 : 3, placeP2: i === 0 ? 3 : 2, place: i === 0 ? 3 : 2,
+    };
+  });
+  return {
+    ecole: { nom_ecole: 'Institut de la Réussite', province: 'Sud-Kivu', ville: 'Bukavu', commune: 'Ibanda', code_ecole: 'EP-2025', annee_scolaire: '2025-2026' },
+    eleve: { nom: 'Chibalonza', postnom: 'Mwendapeke', prenom: 'Patrick', sexe: 'M', lieu_naissance: 'Bukavu', date_naissance: '2011-06-16', numero_perm: 'PROV-2011-0042' },
+    classe: { nom: '1ère Hum. Scientifique', annee: '1', sections: { nom: 'Scientifique' } },
+    template: 'humanites', system: 'semestre', ref: 'IGE/PS/059',
+    periodes, domaines, totals, periodeStats,
+    pourcentage: (totals.annuel / totals.max) * 100, place: 2, nbreEleves: 32,
+    appreciation: { application: 'Très bien', conduite: 'Bonne', deliberation: 'passe' },
+    approuve: true, paiement: { exige: false },
+  };
+})();
 
 // ---- Contact details. ----
 const CONTACT = {
@@ -175,9 +222,9 @@ export default function Landing() {
             </p>
           </div>
 
-          {/* Aperçu fidèle d'un vrai bulletin de l'enseignement secondaire (Humanités) */}
+          {/* Vrai bulletin complet (le composant réel) réduit pour le hero. */}
           <div className="lp-hero-visual" aria-hidden="true">
-            <MiniBulletin />
+            <div className="lp-bull-frame"><Bulletin data={SAMPLE_BULLETIN} /></div>
           </div>
         </div>
       </section>

@@ -649,6 +649,18 @@ table.b-grid tr.b-foot-row td { background: #fff; font-weight: 700; text-align: 
 
 /* Aperçu bulletin officiel (réplique fidèle du secondaire) */
 .lp-hero-visual { display: flex; justify-content: center; }
+
+/* Full real bulletin, shrunk to fit the hero (zoom keeps the layout intact). */
+.lp-bull-frame {
+  width: -moz-fit-content; width: fit-content; margin: 0 auto;
+  background: #fff; border-radius: 6px; overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.38);
+  zoom: 0.58; transform: rotate(0.6deg);
+}
+.lp-bull-frame .bulletin { box-shadow: none; margin: 0; }
+@media (max-width: 900px) { .lp-bull-frame { zoom: 0.5; } }
+@media (max-width: 480px) { .lp-bull-frame { zoom: 0.42; transform: none; } }
 .lp-mb {
   width: 100%; max-width: 380px; background: #fff; color: #1a1a1a;
   border: 1px solid #c9d2db; border-radius: 6px;
