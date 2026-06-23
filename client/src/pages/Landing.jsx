@@ -2,6 +2,7 @@
 // Lives at "/" for non-authenticated visitors. French UI, no emojis.
 import { Link } from 'react-router-dom';
 import Bulletin from '../components/Bulletin.jsx';
+import InstallButton from '../components/InstallButton.jsx';
 
 // A complete, realistic sample bulletin (the real Bulletin component) for the
 // hero — same layout the app produces.
@@ -197,6 +198,7 @@ export default function Landing() {
             <span>GestiEcole</span>
           </div>
           <div className="lp-nav-actions">
+            <InstallButton className="lp-nav-link lp-install" label="Installer l'app" />
             <Link to="/login?demo=1" className="lp-nav-link">Voir la démo</Link>
             <Link to="/inscription" className="btn lp-btn-light">Essai gratuit</Link>
           </div>
