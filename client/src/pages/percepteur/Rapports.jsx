@@ -30,7 +30,7 @@ export default function Rapports() {
 
   useEffect(() => {
     Promise.all([
-      supabase.from('eleves').select('id, nom, postnom, prenom, classe_id, classes(nom, niveau_id)').eq('actif', true).order('nom'),
+      supabase.from('eleves').select('id, nom, postnom, prenom, telephone, classe_id, classes(nom, niveau_id)').eq('actif', true).order('nom'),
       supabase.from('frais').select('*').eq('actif', true),
       supabase.from('paiements').select('*, frais(libelle)').eq('annule', false).order('date_paiement', { ascending: false }),
       supabase.from('frais_reductions').select('*'),
@@ -48,7 +48,7 @@ export default function Rapports() {
     const niveauId = e.classes?.niveau_id || null;
     const applicable = frais.filter((f) => feeApplies(f, niveauId));
     const s = feeSituation(applicable, redByEleve[e.id], payByEleve[e.id], taux);
-    return { e, classe: e.classes?.nom || '—', due: s.totalDueUSD, paid: s.totalPaidUSD, reste: s.totalResteUSD };
+    return { e, classe: e.classes?.nom || '—', tel: e.telephone, due: s.totalDueUSD, paid: s.totalPaidUSD, reste: s.totalResteUSD, overdue: s.totalOverdueUSD };
   }), [eleves, frais, redByEleve, payByEleve, taux]);
 
   const global = useMemo(() => perStudent.reduce((a, r) => ({ due: a.due + r.due, paid: a.paid + r.paid, reste: a.reste + r.reste }), { due: 0, paid: 0, reste: 0 }), [perStudent]);
@@ -87,7 +87,13 @@ export default function Rapports() {
     return { ecole, eleve: e, classe: e.classes?.nom, paiements: pays, due: r?.due || 0, paid: r?.paid || 0, reste: r?.reste || 0 };
   }, [releveId, eleveById, perStudent, payByEleve, ecole]);
 
-  const arrears = perStudent.filter((r) => r.reste > 0.01).sort((a, b) => b.reste - a.reste);
+  const arrears = perStudent.filter((r) => r.reste > 0.01).sort((a, b) => (b.overdue - a.overdue) || (b.reste - a.reste));
+
+  function waReminder(r) {
+    const phone = String(r.tel || '').replace(/[^0-9]/g, '');
+    const msg = `Bonjour, concernant l'élève ${eleveNom(r.e)} à ${ecole?.nom_ecole || "l'école"} : solde dû ${usd(r.reste)}${r.overdue > 0.01 ? ` (dont ${usd(r.overdue)} en retard)` : ''}. Merci de bien vouloir régulariser. Cordialement.`;
+    return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+  }
 
   function exportArrears() {
     const h = 'Élève,Classe,Dû (USD),Payé (USD),Reste (USD)';
@@ -156,10 +162,21 @@ export default function Rapports() {
             {arrears.length === 0 ? <div className="empty-state">Aucun arriéré. Tout est en règle.</div> : (
               <div className="table-wrap">
                 <table className="data">
-                  <thead><tr><th>Élève</th><th>Classe</th><th>Dû</th><th>Payé</th><th>Reste</th></tr></thead>
+                  <thead><tr><th>Élève</th><th>Classe</th><th>Payé</th><th>Reste</th><th>En retard</th><th>Rappel</th></tr></thead>
                   <tbody>
                     {arrears.map((r) => (
-                      <tr key={r.e.id}><td><strong>{eleveNom(r.e)}</strong></td><td>{r.classe}</td><td>{usd(r.due)}</td><td>{usd(r.paid)}</td><td className="due">{usd(r.reste)}</td></tr>
+                      <tr key={r.e.id}>
+                        <td><strong>{eleveNom(r.e)}</strong></td>
+                        <td>{r.classe}</td>
+                        <td>{usd(r.paid)}</td>
+                        <td className="due">{usd(r.reste)}</td>
+                        <td className={r.overdue > 0.01 ? 'due' : ''}>{r.overdue > 0.01 ? usd(r.overdue) : '—'}</td>
+                        <td>
+                          {r.tel
+                            ? <a className="btn btn-outline btn-sm" href={waReminder(r)} target="_blank" rel="noopener noreferrer">WhatsApp</a>
+                            : <span className="admin-sub" style={{ margin: 0 }}>Pas de n°</span>}
+                        </td>
+                      </tr>
                     ))}
                   </tbody>
                 </table>

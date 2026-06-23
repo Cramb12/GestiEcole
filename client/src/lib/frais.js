@@ -34,20 +34,26 @@ export function reductionPct(reductions, fraisId) {
 // for one student. `frais` already filtered to the student's level.
 export function feeSituation(frais, reductions, paiements, taux) {
   const pays = (paiements || []).filter((p) => !p.annule);
-  let totalDue = 0, totalPaid = 0;
+  const today = new Date().toISOString().slice(0, 10);
+  let totalDue = 0, totalPaid = 0, totalOverdue = 0;
   const lignes = (frais || []).map((f) => {
     const red = reductionPct(reductions, f.id);
     const feeUSD = toUSD(f.montant, f.devise, taux) * (1 - red / 100);
     const labels = trancheLabels(f.periodicite);
     const perTranche = labels.length ? feeUSD / labels.length : feeUSD;
+    const ech = f.echeances || {};
     const tranches = labels.map((label, i) => {
       const no = i + 1;
       const paidUSD = round2(pays
         .filter((p) => p.frais_id === f.id && (p.tranche || 1) === no)
         .reduce((s, p) => s + (Number(p.montant_usd) || 0), 0));
       const due = round2(perTranche);
+      const reste = round2(Math.max(0, due - paidUSD));
+      const deadline = ech[String(no)] || null;
+      const enRetard = !!deadline && deadline < today && reste > 0.01;
       totalDue += due; totalPaid += paidUSD;
-      return { no, label, dueUSD: due, paidUSD, resteUSD: round2(Math.max(0, due - paidUSD)) };
+      if (enRetard) totalOverdue += reste;
+      return { no, label, dueUSD: due, paidUSD, resteUSD: reste, deadline, enRetard };
     });
     return { frais: f, red, feeUSD: round2(feeUSD), tranches };
   });
@@ -56,5 +62,6 @@ export function feeSituation(frais, reductions, paiements, taux) {
     totalDueUSD: round2(totalDue),
     totalPaidUSD: round2(totalPaid),
     totalResteUSD: round2(Math.max(0, totalDue - totalPaid)),
+    totalOverdueUSD: round2(totalOverdue),
   };
 }

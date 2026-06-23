@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase.js';
 import { useEcole } from '../../lib/useEcole.js';
 import AdminLayout from '../../components/AdminLayout.jsx';
 import Modal from '../../components/Modal.jsx';
+import { trancheLabels } from '../../lib/frais.js';
 
 const PERIODES = [
   ['unique', 'Frais unique'], ['mensuel', 'Mensuel'], ['trimestre', 'Trimestriel'],
@@ -81,8 +82,9 @@ export default function Frais() {
     else { setMsg({ type: 'success', text: `${rows.length} frais ajoutés. Complétez les montants.` }); load(); }
   }
 
-  const openCreate = () => { setMsg(null); setModal({ edit: null, form: { libelle: '', montant: '', devise: 'USD', periodicite: 'annuel', niveau_id: '', actif: true } }); };
-  const openEdit = (fr) => { setMsg(null); setModal({ edit: fr.id, form: { libelle: fr.libelle, montant: String(fr.montant), devise: fr.devise, periodicite: fr.periodicite, niveau_id: fr.niveau_id || '', actif: fr.actif } }); };
+  const openCreate = () => { setMsg(null); setModal({ edit: null, form: { libelle: '', montant: '', devise: 'USD', periodicite: 'annuel', niveau_id: '', actif: true, echeances: {} } }); };
+  const openEdit = (fr) => { setMsg(null); setModal({ edit: fr.id, form: { libelle: fr.libelle, montant: String(fr.montant), devise: fr.devise, periodicite: fr.periodicite, niveau_id: fr.niveau_id || '', actif: fr.actif, echeances: fr.echeances || {} } }); };
+  const setEch = (no, v) => { const ech = { ...(modal.form.echeances || {}) }; if (v) ech[no] = v; else delete ech[no]; setModal({ ...modal, form: { ...modal.form, echeances: ech } }); };
 
   async function saveFrais() {
     const f = modal.form;
@@ -92,6 +94,7 @@ export default function Frais() {
     const payload = {
       libelle: f.libelle.trim(), montant: Number(f.montant), devise: f.devise,
       periodicite: f.periodicite, niveau_id: f.niveau_id || null, actif: f.actif,
+      echeances: f.echeances || {},
       annee_scolaire: ecole?.annee_scolaire || null,
     };
     const res = modal.edit
@@ -307,6 +310,20 @@ export default function Frais() {
               <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14 }}>
                 <input type="checkbox" checked={modal.form.actif} onChange={(e) => upd('actif', e.target.checked)} /> Actif
               </label>
+            </div>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label className="lbl">Dates limites par tranche <span className="admin-sub" style={{ margin: 0 }}>(optionnel — sert à repérer les retards)</span></label>
+              <div className="echeances">
+                {trancheLabels(modal.form.periodicite).map((label, i) => {
+                  const no = String(i + 1);
+                  return (
+                    <div className="echeance-item" key={no}>
+                      <span>{label}</span>
+                      <input className="input" type="date" value={modal.form.echeances?.[no] || ''} onChange={(e) => setEch(no, e.target.value)} />
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </Modal>

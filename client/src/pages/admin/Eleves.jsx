@@ -17,6 +17,7 @@ const EMPTY = {
   lieu_naissance: '',
   numero_perm: '',
   ecole_provenance: '',
+  telephone: '',
   classe_id: '',
   annee_scolaire: '',
 };
@@ -45,7 +46,7 @@ export default function Eleves() {
     const [el, cl, nv] = await Promise.all([
       supabase
         .from('eleves')
-        .select('id, nom, postnom, prenom, sexe, date_naissance, lieu_naissance, numero_perm, classe_id, annee_scolaire, actif, classes(nom, niveau_id, niveaux(nom))')
+        .select('id, nom, postnom, prenom, sexe, date_naissance, lieu_naissance, numero_perm, telephone, classe_id, annee_scolaire, actif, classes(nom, niveau_id, niveaux(nom))')
         .order('nom'),
       supabase.from('classes').select('id, nom, niveau_id, niveaux(nom), sections(nom)').order('nom'),
       supabase.from('niveaux').select('id, nom').order('nom'),
@@ -93,6 +94,7 @@ export default function Eleves() {
         lieu_naissance: e.lieu_naissance || '',
         numero_perm: e.numero_perm,
         ecole_provenance: e.ecole_provenance || '',
+        telephone: e.telephone || '',
         classe_id: e.classe_id || '',
         annee_scolaire: e.annee_scolaire,
       },
@@ -115,6 +117,7 @@ export default function Eleves() {
       date_naissance: f.date_naissance || null,
       lieu_naissance: f.lieu_naissance.trim() || null,
       ecole_provenance: f.ecole_provenance.trim() || null,
+      telephone: f.telephone.trim() || null,
       classe_id: f.classe_id,
       annee_scolaire: f.annee_scolaire.trim(),
     };
@@ -162,7 +165,7 @@ export default function Eleves() {
   }
 
   function downloadTemplate() {
-    const header = 'nom,postnom,prenom,sexe,date_naissance,lieu_naissance,numero_perm,ecole_provenance,classe,annee_scolaire';
+    const header = 'nom,postnom,prenom,sexe,date_naissance,lieu_naissance,numero_perm,ecole_provenance,telephone,classe,annee_scolaire';
     const example = `Mukendi,Kabongo,Grace,F,2015-04-12,Bukavu,PERM-001,,1ère A,${ecole?.annee_scolaire || '2025-2026'}`;
     downloadCSV('modele_eleves.csv', header + '\n' + example + '\n');
   }
@@ -325,6 +328,10 @@ function EnrollModal({ modal, setModal, classes, saving, onSave, error }) {
           <input className="input" placeholder="Si l'élève vient d'une autre école" value={f.ecole_provenance} onChange={(e) => set('ecole_provenance', e.target.value)} />
         </div>
         <div>
+          <label className="lbl">Téléphone parent / tuteur</label>
+          <input className="input" placeholder="ex: +243 99 000 0000 (pour les rappels)" value={f.telephone} onChange={(e) => set('telephone', e.target.value)} />
+        </div>
+        <div>
           <label className="lbl">Classe <span className="req">*</span></label>
           <select className="input" value={f.classe_id} onChange={(e) => set('classe_id', e.target.value)}>
             <option value="">— Choisir —</option>
@@ -393,6 +400,7 @@ function ImportModal({ classes, defaultAnnee, onClose, onDone }) {
         // N° PERM optional: generate a provisional one when missing.
         numero_perm: r.numero_perm || provisionalPerm(annee),
         ecole_provenance: r.ecole_provenance || null,
+        telephone: r.telephone || null,
         classe_id: classeId,
         annee_scolaire: annee,
       };

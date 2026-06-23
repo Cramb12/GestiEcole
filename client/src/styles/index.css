@@ -348,6 +348,9 @@ table.data tr:hover td { background: #fafbfc; }
 .tab.active { color: var(--bleu-fonce); border-bottom-color: var(--bleu); }
 .card-box { background: #fff; border: 1px solid var(--gris-bord); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 20px; box-shadow: var(--ombre); }
 .card-title { font-size: 16px; color: var(--bleu-fonce); margin-bottom: 14px; }
+.echeances { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-top: 4px; }
+.echeance-item { display: flex; flex-direction: column; gap: 3px; font-size: 12.5px; }
+.echeance-item span { color: var(--texte-clair); }
 
 /* Espace percepteur */
 .pl-nav { display: flex; gap: 4px; border-bottom: 2px solid var(--gris-bord); margin-bottom: 18px; flex-wrap: wrap; }
