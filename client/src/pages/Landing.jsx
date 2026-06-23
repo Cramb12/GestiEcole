@@ -37,6 +37,7 @@ function Icon({ name }) {
     horaire: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
     import: <><path d="M12 3v12" /><path d="M8 11l4 4 4-4" /><path d="M4 21h16" /></>,
     shield: <><path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5z" /><path d="M9 12l2 2 4-4" /></>,
+    money: <><rect x="2" y="6" width="20" height="12" rx="2" /><circle cx="12" cy="12" r="2.5" /><path d="M6 9.5v5M18 9.5v5" /></>,
   };
   return <svg {...common} aria-hidden="true">{paths[name]}</svg>;
 }
@@ -130,6 +131,7 @@ const FEATURES = [
   { icon: 'bulletin', titre: 'Bulletins officiels automatiques', texte: 'Le bulletin au format MINEDUC se remplit et se calcule tout seul. Prêt à imprimer en PDF, primaire comme secondaire.' },
   { icon: 'calc', titre: 'Carnet de cotes intelligent', texte: 'Devoirs, interrogations et examens. Les moyennes, totaux et points sont calculés automatiquement, sans erreur.' },
   { icon: 'rank', titre: 'Classement et rapports', texte: "Classement de la classe, matières en échec, élèves à risque, statistiques de l'école — en un clic." },
+  { icon: 'money', titre: 'Perception des frais scolaires', texte: "Encaissez le minerval et les frais (USD ou FC, conversion automatique), reçus numérotés, suivi des arriérés et rappels WhatsApp aux parents." },
   { icon: 'students', titre: 'Élèves et enseignants', texte: 'Dossiers élèves, comptes enseignants par classe, inscriptions. Chaque enseignant ne voit que ses classes.' },
   { icon: 'presence', titre: 'Présences', texte: 'Suivi des absences et retards, intégrés directement aux rapports de discipline.' },
   { icon: 'horaire', titre: 'Emploi du temps', texte: "Horaire de l'école construit à partir des cours déjà affectés aux enseignants." },
@@ -193,7 +195,7 @@ export default function Landing() {
       {/* ---- Fonctionnalités ---- */}
       <section className="lp-section">
         <h2 className="lp-h2">Tout ce dont votre école a besoin</h2>
-        <p className="lp-sub">Une seule application, du carnet de cotes au bulletin officiel.</p>
+        <p className="lp-sub">Une seule application, du carnet de cotes au bulletin officiel — jusqu'à la perception des frais.</p>
         <div className="lp-feat-grid">
           {FEATURES.map((f) => (
             <div className="lp-feat-card" key={f.titre}>
