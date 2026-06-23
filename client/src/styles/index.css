@@ -12,17 +12,30 @@
   --texte: #1f2937;
   --texte-clair: #6b7280;
   --blanc: #ffffff;
-  --ombre: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --ombre: 0 1px 2px rgba(16, 24, 40, 0.04), 0 4px 14px rgba(16, 24, 40, 0.06);
+  --ombre-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
   --radius: 12px;
+  --font: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-titre: 'Poppins', var(--font);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font);
   background: var(--gris-fond);
   color: var(--texte);
-  line-height: 1.5;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Titres en Poppins (sauf documents officiels : bulletin / reçu gardent leur serif). */
+h1, h2, h3, h4,
+.admin-h1, .welcome h1, .login-title, .card-title,
+.lp-hero-text h1, .lp-h2, .lp-brand, .stat-card .value {
+  font-family: var(--font-titre);
+  letter-spacing: -0.01em;
 }
 
 .center-screen {
@@ -43,13 +56,15 @@ button { cursor: pointer; font-family: inherit; }
   gap: 8px;
   padding: 11px 18px;
   border: none;
-  border-radius: var(--radius);
+  border-radius: 10px;
   font-size: 15px;
   font-weight: 600;
-  transition: transform 0.05s ease, opacity 0.2s ease;
+  box-shadow: var(--ombre-sm);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.15s ease, opacity 0.2s ease;
 }
-.btn:active { transform: translateY(1px); }
-.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn:hover { transform: translateY(-1px); box-shadow: var(--ombre); }
+.btn:active { transform: translateY(0); box-shadow: var(--ombre-sm); }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
 
 .btn-primary { background: var(--bleu); color: #fff; }
 .btn-primary:hover { background: var(--bleu-fonce); }
@@ -215,9 +230,10 @@ button { cursor: pointer; font-family: inherit; }
   background: var(--blanc);
   border: 1px dashed var(--gris-bord);
   border-radius: var(--radius);
-  padding: 30px;
+  padding: 40px 30px;
   text-align: center;
   color: var(--texte-clair);
+  font-size: 14.5px;
 }
 
 @media (max-width: 600px) {
@@ -325,12 +341,13 @@ label.lbl { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5p
 .btn-outline:hover { background: #eef6fc; }
 
 /* ---------- Tables ---------- */
-.table-wrap { overflow-x: auto; border: 1px solid var(--gris-bord); border-radius: var(--radius); background: #fff; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--gris-bord); border-radius: var(--radius); background: #fff; box-shadow: var(--ombre-sm); }
 table.data { width: 100%; border-collapse: collapse; font-size: 14px; }
-table.data th, table.data td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--gris-bord); }
-table.data th { background: var(--gris-fond); font-size: 12.5px; text-transform: uppercase; letter-spacing: .3px; color: var(--texte-clair); }
+table.data th, table.data td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--gris-bord); }
+table.data th { position: sticky; top: 0; z-index: 1; background: var(--gris-fond); font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--texte-clair); }
+table.data tbody tr:nth-child(even) td { background: #fbfcfd; }
 table.data tr:last-child td { border-bottom: none; }
-table.data tr:hover td { background: #fafbfc; }
+table.data tbody tr:hover td { background: #eef6fc; }
 .row-actions { display: flex; gap: 8px; }
 
 /* ---------- Badges / pills ---------- */
@@ -691,6 +708,35 @@ table.b-grid tr.b-foot-row td { background: #fff; font-weight: 700; text-align: 
 }
 .lp-feat-card h3 { font-size: 17px; margin-bottom: 7px; }
 .lp-feat-card p { color: var(--texte-clair); font-size: 14px; }
+
+/* Aperçu produit (showcase) */
+.lp-shots { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 32px; }
+.lp-shot { background: #fff; border: 1px solid var(--gris-bord); border-radius: 14px; overflow: hidden; box-shadow: 0 18px 50px rgba(16,24,40,.12); text-align: left; }
+.lp-shot-bar { display: flex; align-items: center; gap: 6px; padding: 10px 14px; background: var(--gris-fond); border-bottom: 1px solid var(--gris-bord); }
+.lp-shot-bar i { width: 10px; height: 10px; border-radius: 50%; background: #d6dde6; }
+.lp-shot-bar i:nth-child(1) { background: #f87171; }
+.lp-shot-bar i:nth-child(2) { background: #fbbf24; }
+.lp-shot-bar i:nth-child(3) { background: #34d399; }
+.lp-shot-bar em { margin-left: 10px; font-style: normal; font-size: 12.5px; color: var(--texte-clair); font-weight: 600; }
+.lp-shot-body { padding: 18px; }
+.lp-sc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+.lp-sc-stat { background: var(--gris-fond); border-radius: 10px; padding: 12px 14px; border-left: 4px solid var(--bleu); }
+.lp-sc-stat span { display: block; font-size: 12px; color: var(--texte-clair); }
+.lp-sc-stat strong { font-family: var(--font-titre); font-size: 24px; color: var(--bleu-fonce); }
+.lp-sc-stat.lp-ok { border-left-color: #1c7c43; }
+.lp-sc-list { display: flex; flex-direction: column; gap: 8px; }
+.lp-sc-row { display: flex; justify-content: space-between; font-size: 13.5px; padding: 9px 12px; background: var(--gris-fond); border-radius: 8px; }
+.lp-sc-row b { font-weight: 700; }
+.lp-ok { color: #1c7c43; }
+.lp-due { color: var(--rouge); }
+.lp-sc-gauge { margin-bottom: 14px; }
+.lp-sc-gauge-top { display: flex; justify-content: space-between; align-items: baseline; }
+.lp-sc-gauge-top span { font-size: 13.5px; color: var(--texte-clair); }
+.lp-sc-gauge-top strong { font-family: var(--font-titre); font-size: 28px; color: var(--bleu-fonce); }
+.lp-sc-bar { height: 12px; background: #e2e8f0; border-radius: 8px; overflow: hidden; margin: 8px 0 6px; }
+.lp-sc-bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--bleu), #1c7c43); }
+.lp-sc-gauge-sub { font-size: 12.5px; color: var(--texte-clair); }
+@media (max-width: 760px) { .lp-shots { grid-template-columns: 1fr; } }
 
 /* Étapes */
 .lp-steps-wrap { }

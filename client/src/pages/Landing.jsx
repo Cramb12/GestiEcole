@@ -207,6 +207,46 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ---- Aperçu du produit ---- */}
+      <section className="lp-section lp-showcase">
+        <h2 className="lp-h2">Une interface claire, pensée pour le terrain</h2>
+        <p className="lp-sub">Tableau de bord, bulletins, encaissements — tout au même endroit, simple à prendre en main.</p>
+        <div className="lp-shots">
+          <div className="lp-shot" aria-hidden="true">
+            <div className="lp-shot-bar"><i /><i /><i /><em>GestiEcole — Tableau de bord</em></div>
+            <div className="lp-shot-body">
+              <div className="lp-sc-grid">
+                <div className="lp-sc-stat"><span>Élèves</span><strong>312</strong></div>
+                <div className="lp-sc-stat"><span>Classes</span><strong>9</strong></div>
+                <div className="lp-sc-stat lp-ok"><span>Taux de réussite</span><strong>78 %</strong></div>
+                <div className="lp-sc-stat"><span>Enseignants</span><strong>21</strong></div>
+              </div>
+              <div className="lp-sc-list">
+                <div className="lp-sc-row"><span>Bulletins du 1er semestre</span><b className="lp-ok">Prêts</b></div>
+                <div className="lp-sc-row"><span>Proclamation 2ème période</span><b>En cours</b></div>
+                <div className="lp-sc-row"><span>Élèves à risque</span><b className="lp-due">7</b></div>
+              </div>
+            </div>
+          </div>
+
+          <div className="lp-shot" aria-hidden="true">
+            <div className="lp-shot-bar"><i /><i /><i /><em>GestiEcole — Encaissements</em></div>
+            <div className="lp-shot-body">
+              <div className="lp-sc-gauge">
+                <div className="lp-sc-gauge-top"><span>Taux d'encaissement</span><strong>74 %</strong></div>
+                <div className="lp-sc-bar"><span style={{ width: '74%' }} /></div>
+                <div className="lp-sc-gauge-sub">Encaissé 5 220 $ &nbsp;·&nbsp; Reste 1 830 $</div>
+              </div>
+              <div className="lp-sc-list">
+                <div className="lp-sc-row"><span>Espèces</span><b>2 025 $</b></div>
+                <div className="lp-sc-row"><span>Airtel / Orange / M-Pesa</span><b>1 710 $</b></div>
+                <div className="lp-sc-row"><span>Élèves en retard</span><b className="lp-due">21</b></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ---- Comment ça marche ---- */}
       <section className="lp-section lp-steps-wrap">
         <h2 className="lp-h2">Mise en route simple</h2>
