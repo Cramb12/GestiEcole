@@ -7,6 +7,17 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="theme-color" content="#0b6fb8" />
     <meta name="mobile-web-app-capable" content="yes" />
+    <script>
+      // Capture the install prompt as early as possible — Chrome fires
+      // beforeinstallprompt before the React app mounts, so we stash it on a
+      // global and let the InstallButton pick it up.
+      window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        window.__bipEvent = e;
+        window.dispatchEvent(new Event('pwa-can-install'));
+      });
+      window.addEventListener('appinstalled', function () { window.__bipEvent = null; });
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet" />
