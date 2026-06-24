@@ -365,6 +365,17 @@ table.data tbody tr:hover td { background: #eef6fc; }
 .tab.active { color: var(--bleu-fonce); border-bottom-color: var(--bleu); }
 .card-box { background: #fff; border: 1px solid var(--gris-bord); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 20px; box-shadow: var(--ombre); }
 .card-title { font-size: 16px; color: var(--bleu-fonce); margin-bottom: 14px; }
+
+/* Autocomplétion (recherche d'élève) */
+.combo { position: relative; }
+.combo-list {
+  position: absolute; z-index: 30; left: 0; right: 0; top: 100%; margin: 4px 0 0;
+  background: #fff; border: 1px solid var(--gris-bord); border-radius: var(--radius);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.14); max-height: 260px; overflow-y: auto; list-style: none; padding: 4px;
+}
+.combo-item { padding: 9px 12px; font-size: 14.5px; cursor: pointer; border-radius: 8px; }
+.combo-item.hi { background: var(--bleu); color: #fff; }
+.combo-empty { padding: 9px 12px; font-size: 14px; color: var(--texte-clair); }
 .echeances { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-top: 4px; }
 .echeance-item { display: flex; flex-direction: column; gap: 3px; font-size: 12.5px; }
 .echeance-item span { color: var(--texte-clair); }

@@ -8,6 +8,7 @@ import { feeApplies, feeSituation } from '../../lib/frais.js';
 import PercepteurLayout from '../../components/PercepteurLayout.jsx';
 import Modal from '../../components/Modal.jsx';
 import Recu from '../../components/Recu.jsx';
+import Combobox from '../../components/Combobox.jsx';
 
 const MODES = [['especes', 'Espèces'], ['airtel', 'Airtel Money'], ['orange', 'Orange Money'], ['mpesa', 'M-Pesa'], ['banque', 'Banque'], ['autre', 'Autre']];
 const usd = (n) => `${Number(n || 0).toFixed(2)} $`;
@@ -19,7 +20,6 @@ export default function Encaisser() {
 
   const [frais, setFrais] = useState([]);
   const [eleves, setEleves] = useState([]);
-  const [filter, setFilter] = useState('');
   const [eleveId, setEleveId] = useState('');
   const [reductions, setReductions] = useState([]);
   const [paiements, setPaiements] = useState([]);
@@ -86,7 +86,7 @@ export default function Encaisser() {
   }
 
   const eleveNom = (e) => `${e.nom} ${e.postnom || ''} ${e.prenom || ''}`.replace(/\s+/g, ' ').trim();
-  const shown = eleves.filter((e) => eleveNom(e).toLowerCase().includes(filter.toLowerCase()));
+  const eleveOptions = useMemo(() => eleves.map((e) => ({ id: e.id, label: eleveNom(e) })), [eleves]);
 
   return (
     <PercepteurLayout title="Encaisser" subtitle="Choisissez un élève, consultez les soldes et enregistrez un paiement.">
@@ -97,18 +97,14 @@ export default function Encaisser() {
         {msg && <div className={msg.type === 'success' ? 'alert-success' : 'alert-error'}>{msg.text}</div>}
 
         <div className="card-box">
-          <div className="form-grid">
-            <div>
-              <label className="lbl">Rechercher un élève</label>
-              <input className="input" placeholder="Nom…" value={filter} onChange={(e) => setFilter(e.target.value)} />
-            </div>
-            <div>
-              <label className="lbl">Élève</label>
-              <select className="input" value={eleveId} onChange={(e) => setEleveId(e.target.value)}>
-                <option value="">— Choisir —</option>
-                {shown.map((e) => <option key={e.id} value={e.id}>{eleveNom(e)}</option>)}
-              </select>
-            </div>
+          <div style={{ maxWidth: 460 }}>
+            <Combobox
+              label="Élève"
+              placeholder="Tapez le nom de l'élève…"
+              items={eleveOptions}
+              value={eleveId}
+              onChange={setEleveId}
+            />
           </div>
         </div>
 
