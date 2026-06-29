@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase.js';
 import { useEcole } from '../../lib/useEcole.js';
 import { parseCSV, downloadCSV } from '../../lib/csv.js';
 import { provisionalPerm } from '../../lib/perm.js';
+import { fetchAll } from '../../lib/db.js';
 import AdminLayout from '../../components/AdminLayout.jsx';
 import Modal from '../../components/Modal.jsx';
 
@@ -44,14 +45,14 @@ export default function Eleves() {
   async function load() {
     setLoading(true);
     const [el, cl, nv] = await Promise.all([
-      supabase
+      fetchAll(() => supabase
         .from('eleves')
         .select('id, nom, postnom, prenom, sexe, date_naissance, lieu_naissance, numero_perm, telephone, classe_id, annee_scolaire, actif, classes(nom, niveau_id, niveaux(nom))')
-        .order('nom'),
+        .order('nom').order('id')),
       supabase.from('classes').select('id, nom, niveau_id, niveaux(nom), sections(nom)').order('nom'),
       supabase.from('niveaux').select('id, nom').order('nom'),
     ]);
-    setEleves(el.data || []);
+    setEleves(el || []);
     setClasses(cl.data || []);
     setNiveaux(nv.data || []);
     setLoading(false);

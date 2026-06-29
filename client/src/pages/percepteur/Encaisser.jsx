@@ -9,6 +9,7 @@ import PercepteurLayout from '../../components/PercepteurLayout.jsx';
 import Modal from '../../components/Modal.jsx';
 import Recu from '../../components/Recu.jsx';
 import Combobox from '../../components/Combobox.jsx';
+import { fetchAll } from '../../lib/db.js';
 
 const MODES = [['especes', 'Espèces'], ['airtel', 'Airtel Money'], ['orange', 'Orange Money'], ['mpesa', 'M-Pesa'], ['banque', 'Banque'], ['autre', 'Autre']];
 const usd = (n) => `${Number(n || 0).toFixed(2)} $`;
@@ -31,8 +32,8 @@ export default function Encaisser() {
   useEffect(() => {
     Promise.all([
       supabase.from('frais').select('*').eq('actif', true).order('libelle'),
-      supabase.from('eleves').select('id, nom, postnom, prenom, classe_id, classes(niveau_id)').eq('actif', true).order('nom'),
-    ]).then(([f, e]) => { setFrais(f.data || []); setEleves(e.data || []); });
+      fetchAll(() => supabase.from('eleves').select('id, nom, postnom, prenom, classe_id, classes(niveau_id)').eq('actif', true).order('nom').order('id')),
+    ]).then(([f, e]) => { setFrais(f.data || []); setEleves(e || []); });
   }, []);
 
   const eleve = useMemo(() => eleves.find((e) => e.id === eleveId), [eleves, eleveId]);

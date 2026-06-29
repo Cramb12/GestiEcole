@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase.js';
 import { useEcole } from '../../lib/useEcole.js';
+import { fetchAll } from '../../lib/db.js';
 import AdminLayout from '../../components/AdminLayout.jsx';
 import Modal from '../../components/Modal.jsx';
 import { trancheLabels } from '../../lib/frais.js';
@@ -47,11 +48,11 @@ export default function Frais() {
     const [n, f, e] = await Promise.all([
       supabase.from('niveaux').select('id, nom').order('nom'),
       supabase.from('frais').select('*, niveaux(nom)').order('libelle'),
-      supabase.from('eleves').select('id, nom, postnom, prenom').eq('actif', true).order('nom'),
+      fetchAll(() => supabase.from('eleves').select('id, nom, postnom, prenom').eq('actif', true).order('nom').order('id')),
     ]);
     setNiveaux(n.data || []);
     setFrais(f.data || []);
-    setEleves(e.data || []);
+    setEleves(e || []);
     setLoading(false);
   }
   useEffect(() => { load(); }, []);

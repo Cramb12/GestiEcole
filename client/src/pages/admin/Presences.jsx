@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabase.js';
 import { useEcole } from '../../lib/useEcole.js';
+import { fetchAll } from '../../lib/db.js';
 import AdminLayout from '../../components/AdminLayout.jsx';
 
 const thisMonth = () => new Date().toISOString().slice(0, 7);
@@ -41,10 +42,10 @@ export default function Presences() {
       const next = m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`;
       const [els, pr] = await Promise.all([
         supabase.from('eleves').select('id, nom, postnom, prenom').eq('classe_id', classeId).eq('actif', true).order('nom'),
-        supabase.from('presences').select('eleve_id, date, statut').eq('classe_id', classeId).gte('date', `${month}-01`).lt('date', `${next}-01`),
+        fetchAll(() => supabase.from('presences').select('eleve_id, date, statut').eq('classe_id', classeId).gte('date', `${month}-01`).lt('date', `${next}-01`).order('id')),
       ]);
       setStudents(els.data || []);
-      setMonthRows(pr.data || []);
+      setMonthRows(pr);
       setLoading(false);
     }
     load();

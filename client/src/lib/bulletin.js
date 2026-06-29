@@ -2,6 +2,7 @@
 import { supabase } from './supabase.js';
 import { maxima, brancheApplies } from './notes.js';
 import { feeSituation, feeApplies } from './frais.js';
+import { fetchAll } from './db.js';
 
 // Official form references per template.
 export const REF = {
@@ -50,11 +51,14 @@ function rankByScore(scoreMap) {
 // its own class ranking. Plus the annual ranking, computed at year-end.
 async function classStats(classeId, pers) {
   const periodeIds = pers.map((p) => p.id);
-  const { data: notes } = await supabase
+  const ids = periodeIds.length ? periodeIds : ['00000000-0000-0000-0000-000000000000'];
+  // Paginate: a fully-graded class over several periods exceeds the 1000-row cap.
+  const notes = await fetchAll(() => supabase
     .from('notes')
     .select('eleve_id, periode_id, points_journaliers_1, points_journaliers_2, points_obtenus')
     .eq('classe_id', classeId)
-    .in('periode_id', periodeIds.length ? periodeIds : ['00000000-0000-0000-0000-000000000000']);
+    .in('periode_id', ids)
+    .order('id'));
 
   const per = {};                    // periodeId -> { p1, p2, tot: {eleve -> sum}, any }
   const annual = {};                 // eleveId -> sum of points_obtenus

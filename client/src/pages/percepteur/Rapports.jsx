@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabase.js';
 import { useEcole } from '../../lib/useEcole.js';
 import { downloadCSV } from '../../lib/csv.js';
+import { fetchAll } from '../../lib/db.js';
 import { feeApplies, feeSituation, reductionPct, toUSD } from '../../lib/frais.js';
 import PercepteurLayout from '../../components/PercepteurLayout.jsx';
 import Releve from '../../components/Releve.jsx';
@@ -30,12 +31,12 @@ export default function Rapports() {
 
   useEffect(() => {
     Promise.all([
-      supabase.from('eleves').select('id, nom, postnom, prenom, telephone, classe_id, classes(nom, niveau_id)').eq('actif', true).order('nom'),
+      fetchAll(() => supabase.from('eleves').select('id, nom, postnom, prenom, telephone, classe_id, classes(nom, niveau_id)').eq('actif', true).order('nom').order('id')),
       supabase.from('frais').select('*').eq('actif', true),
-      supabase.from('paiements').select('*, frais(libelle)').eq('annule', false).order('date_paiement', { ascending: false }),
-      supabase.from('frais_reductions').select('*'),
+      fetchAll(() => supabase.from('paiements').select('*, frais(libelle)').eq('annule', false).order('date_paiement', { ascending: false }).order('id')),
+      fetchAll(() => supabase.from('frais_reductions').select('*').order('id')),
     ]).then(([e, f, p, r]) => {
-      setEleves(e.data || []); setFrais(f.data || []); setPaiements(p.data || []); setReductions(r.data || []);
+      setEleves(e || []); setFrais(f.data || []); setPaiements(p || []); setReductions(r || []);
       setLoading(false);
     });
   }, []);

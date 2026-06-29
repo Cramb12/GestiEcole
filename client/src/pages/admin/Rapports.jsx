@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../lib/supabase.js';
 import { useEcole } from '../../lib/useEcole.js';
 import { downloadCSV } from '../../lib/csv.js';
+import { fetchAll } from '../../lib/db.js';
 import AdminLayout from '../../components/AdminLayout.jsx';
 
 const fullName = (e) => `${e?.nom || ''} ${e?.postnom || ''} ${e?.prenom || ''}`.replace(/\s+/g, ' ').trim();
@@ -43,7 +44,7 @@ export default function Rapports() {
     if (mode !== 'ecole' || classes.length === 0) return;
     (async () => {
       setLoading(true);
-      const { data: allNotes } = await supabase.from('notes').select('eleve_id, classe_id, points_obtenus, max_periode');
+      const allNotes = await fetchAll(() => supabase.from('notes').select('eleve_id, classe_id, points_obtenus, max_periode').order('id'));
       const perStudent = {}; // classe_id -> eleve_id -> {obt,max}
       (allNotes || []).forEach((n) => {
         if (n.points_obtenus == null) return;
@@ -83,10 +84,10 @@ export default function Rapports() {
       setLoadingC(true);
       const [els, nt, pr] = await Promise.all([
         supabase.from('eleves').select('id, nom, postnom, prenom').eq('classe_id', classeId).eq('actif', true).order('nom'),
-        supabase.from('notes').select('eleve_id, branche_id, points_obtenus, max_periode, branches(nom)').eq('classe_id', classeId).eq('periode_id', periodeId),
-        supabase.from('presences').select('eleve_id, statut').eq('classe_id', classeId),
+        fetchAll(() => supabase.from('notes').select('eleve_id, branche_id, points_obtenus, max_periode, branches(nom)').eq('classe_id', classeId).eq('periode_id', periodeId).order('id')),
+        fetchAll(() => supabase.from('presences').select('eleve_id, statut').eq('classe_id', classeId).order('id')),
       ]);
-      setStudents(els.data || []); setNotes(nt.data || []); setPresences(pr.data || []);
+      setStudents(els.data || []); setNotes(nt); setPresences(pr);
       setLoadingC(false);
     })();
   }, [mode, classeId, periodeId]);

@@ -8,6 +8,7 @@ import { supabase } from '../../lib/supabase.js';
 import { useEcole } from '../../lib/useEcole.js';
 import { brancheApplies, ranking } from '../../lib/notes.js';
 import { downloadCSV } from '../../lib/csv.js';
+import { fetchAll } from '../../lib/db.js';
 import AdminLayout from '../../components/AdminLayout.jsx';
 import NotesGrid from '../../components/NotesGrid.jsx';
 
@@ -56,10 +57,10 @@ export default function Notes() {
     setLoading(true);
     const [els, nt] = await Promise.all([
       supabase.from('eleves').select('id, nom, postnom, prenom').eq('classe_id', classeId).eq('actif', true).order('nom'),
-      supabase.from('notes').select('eleve_id, branche_id, points_obtenus, max_periode').eq('classe_id', classeId).eq('periode_id', periodeId),
+      fetchAll(() => supabase.from('notes').select('eleve_id, branche_id, points_obtenus, max_periode').eq('classe_id', classeId).eq('periode_id', periodeId).order('id')),
     ]);
     setStudents(els.data || []);
-    setNotes(nt.data || []);
+    setNotes(nt);
     setLoading(false);
   }
 
