@@ -8,6 +8,7 @@ import { useEcole } from '../../lib/useEcole.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { brancheApplies } from '../../lib/notes.js';
 import { isLocked, resolveSousPeriode, recomputeNotes } from '../../lib/gradebook.js';
+import { fetchAll } from '../../lib/db.js';
 import Layout from '../../components/Layout.jsx';
 import Modal from '../../components/Modal.jsx';
 
@@ -97,8 +98,9 @@ export default function Notes() {
     setEvaluations(evals || []);
     const ids = (evals || []).map((e) => e.id);
     if (ids.length) {
-      const { data: sc } = await supabase.from('evaluation_scores').select('evaluation_id, note').in('evaluation_id', ids);
-      const cnt = {}; (sc || []).forEach((s) => { if (s.note != null) cnt[s.evaluation_id] = (cnt[s.evaluation_id] || 0) + 1; });
+      // Paginate: students × evaluations can exceed the 1000-row cap for a busy class.
+      const sc = await fetchAll(() => supabase.from('evaluation_scores').select('evaluation_id, note').in('evaluation_id', ids).order('id'));
+      const cnt = {}; sc.forEach((s) => { if (s.note != null) cnt[s.evaluation_id] = (cnt[s.evaluation_id] || 0) + 1; });
       setScoreCounts(cnt);
     } else setScoreCounts({});
     setSummary((notes || []).sort((a, b) => fullName(a.eleves).localeCompare(fullName(b.eleves))));

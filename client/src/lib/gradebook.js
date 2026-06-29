@@ -6,6 +6,7 @@
 //   Total = P1 + P2 + Examen   (sur 4M)
 import { supabase } from './supabase.js';
 import { maxima } from './notes.js';
+import { fetchAll } from './db.js';
 
 export const GRACE_DAYS = 5;
 
@@ -41,8 +42,9 @@ export async function recomputeNotes(classeId, brancheId, periode, M, anneeScola
   const evalIds = evalList.map((e) => e.id);
   let scores = [];
   if (evalIds.length) {
-    const { data } = await supabase.from('evaluation_scores').select('evaluation_id, eleve_id, note').in('evaluation_id', evalIds);
-    scores = data || [];
+    // Paginate: students × evaluations can exceed the 1000-row cap — a truncated
+    // read here would write WRONG aggregated grades.
+    scores = await fetchAll(() => supabase.from('evaluation_scores').select('evaluation_id, eleve_id, note').in('evaluation_id', evalIds).order('id'));
   }
   const byEleve = {};
   scores.forEach((s) => { (byEleve[s.eleve_id] = byEleve[s.eleve_id] || {})[s.evaluation_id] = s.note; });

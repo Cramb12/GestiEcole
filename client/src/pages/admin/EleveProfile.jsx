@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase.js';
 import { useEcole } from '../../lib/useEcole.js';
 import { isProvisional } from '../../lib/perm.js';
+import { fetchAll } from '../../lib/db.js';
 import AdminLayout from '../../components/AdminLayout.jsx';
 import Modal from '../../components/Modal.jsx';
 
@@ -37,12 +38,12 @@ export default function EleveProfile() {
     setEleve(el);
 
     const [pr, nt, hi, cl] = await Promise.all([
-      supabase.from('presences').select('statut').eq('eleve_id', id),
+      fetchAll(() => supabase.from('presences').select('statut').eq('eleve_id', id).order('id')),
       supabase.from('notes').select('points_obtenus, max_periode, periodes(nom)').eq('eleve_id', id),
       supabase.from('promotions_history').select('*, classes(nom)').eq('eleve_id', id).order('created_at', { ascending: false }),
       supabase.from('classes').select('id, nom, niveaux(nom)').order('nom'),
     ]);
-    setPresences(pr.data || []);
+    setPresences(pr);
     setNotes(nt.data || []);
     setHistory(hi.data || []);
     setClasses(cl.data || []);
