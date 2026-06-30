@@ -6,11 +6,21 @@ import { useAuth } from '../context/AuthContext.jsx';
 // Demo credentials pre-filled when arriving from the landing page (?demo=1).
 const DEMO = { email: 'directeur@ecole.cd', password: 'admin123' };
 
-export default function Login() {
+// Role-specific entry portals. Same login form, different heading; after
+// sign-in everyone is routed to their own space, so no portal locks anyone out.
+const PORTALS = {
+  direction: { title: 'Espace Direction', sub: 'Connexion réservée à la direction' },
+  enseignant: { title: 'Espace Enseignant', sub: 'Connexion réservée aux enseignants' },
+  percepteur: { title: 'Espace Perception', sub: 'Connexion réservée au percepteur' },
+  inscriptions: { title: 'Espace Inscriptions', sub: 'Connexion réservée au chargé des inscriptions' },
+};
+
+export default function Login({ variant }) {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const isDemo = params.get('demo') === '1';
+  const portal = PORTALS[variant] || null;
 
   const [email, setEmail] = useState(isDemo ? DEMO.email : '');
   const [password, setPassword] = useState(isDemo ? DEMO.password : '');
@@ -33,6 +43,7 @@ export default function Login() {
       const dest = user.isOwner ? '/vendeur'
         : user.role === 'super_admin' ? '/admin'
         : user.role === 'percepteur' ? '/percepteur'
+        : user.role === 'inscripteur' ? '/inscriptions'
         : '/enseignant';
       navigate(dest, { replace: true });
     } catch (err) {
@@ -53,8 +64,8 @@ export default function Login() {
     <div className="login-wrap">
       <form className="login-card" onSubmit={handleSubmit}>
         <div className="login-logo"><img src="/gestiecole.png" alt="GestiEcole" /></div>
-        <div className="login-title">Système de Gestion Scolaire</div>
-        <div className="login-sub">République Démocratique du Congo</div>
+        <div className="login-title">{portal ? portal.title : 'Système de Gestion Scolaire'}</div>
+        <div className="login-sub">{portal ? portal.sub : 'République Démocratique du Congo'}</div>
 
         {isDemo && (
           <div className="alert-error" style={{ background: '#fff7e0', color: '#8a6d00', borderColor: '#f3d98a' }}>

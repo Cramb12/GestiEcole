@@ -26,8 +26,10 @@ import BulletinEleve from './pages/admin/BulletinEleve.jsx';
 import Horaire from './pages/admin/Horaire.jsx';
 import Creneaux from './pages/admin/Creneaux.jsx';
 import Frais from './pages/admin/Frais.jsx';
+import Personnel from './pages/admin/Personnel.jsx';
 import Encaisser from './pages/percepteur/Encaisser.jsx';
 import RapportsFinances from './pages/percepteur/Rapports.jsx';
+import InscripteurEleves from './pages/inscripteur/Eleves.jsx';
 import HoraireTeacher from './pages/teacher/Horaire.jsx';
 
 // Public landing for visitors; logged-in users go straight to their dashboard.
@@ -37,6 +39,7 @@ function Home() {
   if (!user) return <Landing />;
   if (user.isOwner) return <Navigate to="/vendeur" replace />;
   if (user.role === 'percepteur') return <Navigate to="/percepteur" replace />;
+  if (user.role === 'inscripteur') return <Navigate to="/inscriptions" replace />;
   return <Navigate to={user.role === 'super_admin' ? '/admin' : '/enseignant'} replace />;
 }
 
@@ -50,10 +53,15 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/login/direction" element={<Login variant="direction" />} />
+      <Route path="/login/enseignant" element={<Login variant="enseignant" />} />
+      <Route path="/login/percepteur" element={<Login variant="percepteur" />} />
+      <Route path="/login/inscriptions" element={<Login variant="inscriptions" />} />
       <Route path="/inscription" element={<Inscription />} />
       <Route path="/vendeur" element={<ProtectedRoute owner><Vendeur /></ProtectedRoute>} />
       <Route path="/percepteur" element={<ProtectedRoute role={['percepteur', 'super_admin']}><Encaisser /></ProtectedRoute>} />
       <Route path="/percepteur/rapports" element={<ProtectedRoute role={['percepteur', 'super_admin']}><RapportsFinances /></ProtectedRoute>} />
+      <Route path="/inscriptions" element={<ProtectedRoute role={['inscripteur', 'super_admin']}><InscripteurEleves /></ProtectedRoute>} />
 
       {/* Super Admin */}
       <Route path="/admin" element={<Admin><AdminDashboard /></Admin>} />
@@ -73,6 +81,7 @@ export default function App() {
       <Route path="/admin/creneaux" element={<Admin><Creneaux /></Admin>} />
       <Route path="/admin/periodes" element={<Admin><Periodes /></Admin>} />
       <Route path="/admin/frais" element={<Admin><Frais /></Admin>} />
+      <Route path="/admin/personnel" element={<Admin><Personnel /></Admin>} />
 
       {/* Teacher */}
       <Route

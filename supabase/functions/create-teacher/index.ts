@@ -23,7 +23,6 @@ function json(status: number, body: unknown) {
 }
 
 const APP_URL = Deno.env.get('APP_URL') || 'https://www.gestiecole.com';
-const LOGIN_URL = `${APP_URL.replace(/\/+$/, '')}/login`;
 const MAIL_FROM = Deno.env.get('MAIL_FROM') || 'GestiEcole <noreply@gestiecole.com>';
 
 // Send one transactional email via Resend. Never throws — email is best-effort
@@ -47,17 +46,27 @@ async function sendEmail(to: string, subject: string, html: string) {
 const esc = (s: string) => String(s).replace(/[&<>"]/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string));
 
-function credentialsEmail(nom: string, ecole: string, email: string, password: string) {
+// Staff roles a director may create, with the French label used in the email
+// and the login URL each should use (their own role portal).
+const STAFF: Record<string, { label: string; portal: string }> = {
+  teacher: { label: 'enseignant', portal: '/login/enseignant' },
+  percepteur: { label: 'percepteur', portal: '/login/percepteur' },
+  inscripteur: { label: 'chargé des inscriptions', portal: '/login/inscriptions' },
+};
+
+function credentialsEmail(nom: string, ecole: string, email: string, password: string, role: string) {
+  const meta = STAFF[role] || STAFF.teacher;
+  const url = `${APP_URL.replace(/\/+$/, '')}${meta.portal}`;
   return `<div style="font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;line-height:1.5;max-width:600px">
   <p>Bonjour ${esc(nom)},</p>
-  <p>Un compte enseignant a été créé pour vous sur GestiEcole par la direction de « <strong>${esc(ecole)}</strong> ».</p>
+  <p>Un compte ${meta.label} a été créé pour vous sur GestiEcole par la direction de « <strong>${esc(ecole)}</strong> ».</p>
   <p><strong>Voici vos identifiants de connexion :</strong></p>
   <p style="background:#f4f4f5;padding:12px 16px;border-radius:6px">
-    Adresse : <a href="${LOGIN_URL}">${LOGIN_URL}</a><br>
+    Adresse : <a href="${url}">${url}</a><br>
     Email : <strong>${esc(email)}</strong><br>
     Mot de passe : <strong>${esc(password)}</strong>
   </p>
-  <p><strong>Important :</strong> gardez ces identifiants secrets et ne les partagez avec personne. Ils donnent accès aux notes et aux données des élèves dont vous avez la charge.</p>
+  <p><strong>Important :</strong> gardez ces identifiants secrets et ne les partagez avec personne. Ils donnent accès aux données de votre école.</p>
   <p>Pour toute question, contactez la direction de votre école.</p>
   <p>L'équipe GestiEcole</p>
 </div>`;
@@ -103,14 +112,16 @@ Deno.serve(async (req) => {
       return json(403, { message: "Période d'essai expirée. Activez votre abonnement pour ajouter des comptes." });
     }
 
-    // 3. Validate the payload.
-    const { nom, postnom, email, password } = await req.json();
+    // 3. Validate the payload. `role` is optional (defaults to teacher) and must
+    // be one of the staff roles a director is allowed to create.
+    const { nom, postnom, email, password, role } = await req.json();
     if (!nom || !email || !password) {
       return json(400, { message: 'Nom, email et mot de passe sont obligatoires.' });
     }
     if (String(password).length < 6) {
       return json(400, { message: 'Le mot de passe doit contenir au moins 6 caractères.' });
     }
+    const staffRole = role && STAFF[role] ? role : 'teacher';
 
     // 4. Create the auth user (email pre-confirmed so they can log in now).
     const { data: created, error: createErr } = await supabase.auth.admin.createUser({
@@ -120,13 +131,13 @@ Deno.serve(async (req) => {
     });
     if (createErr) return json(400, { message: createErr.message });
 
-    // 5. Create the matching profile (role = teacher, same school as the admin).
+    // 5. Create the matching profile (chosen staff role, same school as the admin).
     const { error: profErr } = await supabase.from('profiles').insert({
       id: created.user.id,
       nom,
       postnom: postnom || null,
       email,
-      role: 'teacher',
+      role: staffRole,
       ecole_id: profile.ecole_id,
     });
     if (profErr) {
@@ -135,12 +146,12 @@ Deno.serve(async (req) => {
       return json(400, { message: profErr.message });
     }
 
-    // 6. Email the login details to the teacher (non-blocking — never affects
-    // the result). This is the only moment the password exists in the clear.
+    // 6. Email the login details to the new staff member (non-blocking — never
+    // affects the result). This is the only moment the password exists in clear.
     await sendEmail(
       email,
       'Vos identifiants de connexion — GestiEcole',
-      credentialsEmail(nom, ecole?.nom_ecole || 'votre école', email, password),
+      credentialsEmail(nom, ecole?.nom_ecole || 'votre école', email, password, staffRole),
     );
 
     return json(200, { id: created.user.id });

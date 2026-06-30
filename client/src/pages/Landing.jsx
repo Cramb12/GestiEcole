@@ -348,6 +348,13 @@ export default function Landing() {
             <p className="lp-footer-tag">Système de gestion scolaire conforme aux normes MINEDUC.</p>
           </div>
           <div className="lp-footer-contact">
+            <strong style={{ color: '#fff' }}>Espaces de connexion</strong>
+            <Link to="/login/direction">Direction</Link>
+            <Link to="/login/enseignant">Enseignant</Link>
+            <Link to="/login/percepteur">Percepteur</Link>
+            <Link to="/login/inscriptions">Chargé des inscriptions</Link>
+          </div>
+          <div className="lp-footer-contact">
             <a href={`tel:+${CONTACT.whatsapp}`}>Téléphone : {CONTACT.telephone}</a>
             <a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a>
             <span>Bukavu — Goma, République Démocratique du Congo</span>

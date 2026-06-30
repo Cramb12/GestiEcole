@@ -16,6 +16,7 @@ export default function ProtectedRoute({ children, role, owner }) {
   const home = user.isOwner ? '/vendeur'
     : user.role === 'super_admin' ? '/admin'
     : user.role === 'percepteur' ? '/percepteur'
+    : user.role === 'inscripteur' ? '/inscriptions'
     : '/enseignant';
 
   // Platform-owner-only route.
