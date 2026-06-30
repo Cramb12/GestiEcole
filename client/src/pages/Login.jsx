@@ -104,6 +104,8 @@ export default function Login({ variant }) {
         </button>
 
         <div className="login-hint">
+          <Link to="/mot-de-passe-oublie" style={{ color: 'var(--bleu)', fontWeight: 600 }}>Mot de passe oublié ?</Link>
+          <br /><br />
           Comptes de démonstration :<br />
           Direction → <strong>directeur@ecole.cd</strong> / admin123<br />
           Enseignant → <strong>demo.kalala@ecole.cd</strong> / demo2025<br />

@@ -3,6 +3,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Login from './pages/Login.jsx';
+import MotDePasseOublie from './pages/MotDePasseOublie.jsx';
+import ReinitialiserMotDePasse from './pages/ReinitialiserMotDePasse.jsx';
 import Landing from './pages/Landing.jsx';
 import Inscription from './pages/Inscription.jsx';
 import Vendeur from './pages/Vendeur.jsx';
@@ -57,6 +59,8 @@ export default function App() {
       <Route path="/login/enseignant" element={<Login variant="enseignant" />} />
       <Route path="/login/percepteur" element={<Login variant="percepteur" />} />
       <Route path="/login/inscriptions" element={<Login variant="inscriptions" />} />
+      <Route path="/mot-de-passe-oublie" element={<MotDePasseOublie />} />
+      <Route path="/reset-password" element={<ReinitialiserMotDePasse />} />
       <Route path="/inscription" element={<Inscription />} />
       <Route path="/vendeur" element={<ProtectedRoute owner><Vendeur /></ProtectedRoute>} />
       <Route path="/percepteur" element={<ProtectedRoute role={['percepteur', 'super_admin']}><Encaisser /></ProtectedRoute>} />
