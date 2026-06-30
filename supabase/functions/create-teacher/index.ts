@@ -22,6 +22,46 @@ function json(status: number, body: unknown) {
   });
 }
 
+const APP_URL = Deno.env.get('APP_URL') || 'https://www.gestiecole.com';
+const MAIL_FROM = Deno.env.get('MAIL_FROM') || 'GestiEcole <noreply@gestiecole.com>';
+
+// Send one transactional email via Resend. Never throws — email is best-effort
+// and must not affect account creation (non-blocking).
+async function sendEmail(to: string, subject: string, html: string) {
+  const key = Deno.env.get('RESEND_API_KEY');
+  if (!key) { console.warn('RESEND_API_KEY manquant — email ignoré.'); return; }
+  try {
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: MAIL_FROM, to, subject, html }),
+    });
+    if (!r.ok) console.error('Resend', r.status, await r.text());
+  } catch (e) {
+    console.error('Resend exception', String((e as Error)?.message || e));
+  }
+}
+
+// Escape user-supplied values before embedding them in the email HTML.
+const esc = (s: string) => String(s).replace(/[&<>"]/g, (c) =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string));
+
+function credentialsEmail(nom: string, ecole: string, email: string, password: string) {
+  return `<div style="font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;line-height:1.5;max-width:600px">
+  <p>Bonjour ${esc(nom)},</p>
+  <p>Un compte enseignant a été créé pour vous sur GestiEcole par la direction de « <strong>${esc(ecole)}</strong> ».</p>
+  <p><strong>Voici vos identifiants de connexion :</strong></p>
+  <p style="background:#f4f4f5;padding:12px 16px;border-radius:6px">
+    Adresse : <a href="${APP_URL}">${APP_URL}</a><br>
+    Email : <strong>${esc(email)}</strong><br>
+    Mot de passe : <strong>${esc(password)}</strong>
+  </p>
+  <p><strong>Important :</strong> gardez ces identifiants secrets et ne les partagez avec personne. Ils donnent accès aux notes et aux données des élèves dont vous avez la charge.</p>
+  <p>Pour toute question, contactez la direction de votre école.</p>
+  <p>L'équipe GestiEcole</p>
+</div>`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
   if (req.method !== 'POST') return json(405, { message: 'Méthode non autorisée.' });
@@ -52,7 +92,7 @@ Deno.serve(async (req) => {
     // 2b. Block writes when the trial has expired (school is read-only).
     const { data: ecole } = await supabase
       .from('ecole')
-      .select('statut, essai_fin')
+      .select('statut, essai_fin, nom_ecole')
       .eq('id', profile.ecole_id)
       .maybeSingle();
     const today = new Date().toISOString().slice(0, 10);
@@ -93,6 +133,14 @@ Deno.serve(async (req) => {
       await supabase.auth.admin.deleteUser(created.user.id);
       return json(400, { message: profErr.message });
     }
+
+    // 6. Email the login details to the teacher (non-blocking — never affects
+    // the result). This is the only moment the password exists in the clear.
+    await sendEmail(
+      email,
+      'Vos identifiants de connexion — GestiEcole',
+      credentialsEmail(nom, ecole?.nom_ecole || 'votre école', email, password),
+    );
 
     return json(200, { id: created.user.id });
   } catch (e) {

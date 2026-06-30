@@ -21,6 +21,53 @@ function json(status: number, body: unknown) {
   return new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
 }
 
+const APP_URL = Deno.env.get('APP_URL') || 'https://www.gestiecole.com';
+const MAIL_FROM = Deno.env.get('MAIL_FROM') || 'GestiEcole <noreply@gestiecole.com>';
+
+// Send one transactional email via Resend. Never throws — email is best-effort
+// and must not affect the signup outcome (non-blocking).
+async function sendEmail(to: string, subject: string, html: string) {
+  const key = Deno.env.get('RESEND_API_KEY');
+  if (!key) { console.warn('RESEND_API_KEY manquant — email ignoré.'); return; }
+  try {
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: MAIL_FROM, to, subject, html }),
+    });
+    if (!r.ok) console.error('Resend', r.status, await r.text());
+  } catch (e) {
+    console.error('Resend exception', String((e as Error)?.message || e));
+  }
+}
+
+// DD/MM/YYYY for human-readable dates in emails.
+const frDate = (iso: string) => iso.split('-').reverse().join('/');
+
+// Escape user-supplied values before embedding them in the email HTML.
+const esc = (s: string) => String(s).replace(/[&<>"]/g, (c) =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string));
+
+function welcomeEmail(nom: string, ecole: string, annee: string, essaiFin: string) {
+  return `<div style="font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;line-height:1.5;max-width:600px">
+  <p>Bonjour ${esc(nom)},</p>
+  <p>Félicitations, l'école « <strong>${esc(ecole)}</strong> » est maintenant créée sur GestiEcole pour l'année scolaire ${esc(annee)}.</p>
+  <p>Votre période d'essai gratuite de 30 jours est active jusqu'au <strong>${frDate(essaiFin)}</strong>. Vous avez accès à toutes les fonctionnalités, sans engagement.</p>
+  <p><strong>Prochaines étapes pour bien démarrer :</strong></p>
+  <ol>
+    <li>Connectez-vous avec l'email et le mot de passe que vous avez choisis : <a href="${APP_URL}">${APP_URL}</a></li>
+    <li>Vérifiez la structure déjà préparée (niveaux, périodes) et créez vos classes.</li>
+    <li>Ajoutez vos enseignants — chacun recevra ses identifiants par email.</li>
+    <li>Inscrivez vos élèves et commencez à saisir les notes.</li>
+    <li>Configurez les frais scolaires si vous utilisez le module de perception.</li>
+  </ol>
+  <p>Besoin d'aide pour l'installation ou la formation ? Nous vous accompagnons gratuitement.<br>
+  WhatsApp : +243 973 184 702<br>
+  Email : gesti.ecole@gmail.com</p>
+  <p>L'équipe GestiEcole</p>
+</div>`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
   if (req.method !== 'POST') return json(405, { message: 'Méthode non autorisée.' });
@@ -95,6 +142,13 @@ Deno.serve(async (req) => {
     // school can create classes right away. Non-fatal if it fails.
     const { error: provErr } = await supabase.rpc('provision_school_structure', { eid: ecoleId });
     if (provErr) console.error('provision_school_structure', provErr.message);
+
+    // 5. Welcome email with next steps (non-blocking — never affects the result).
+    await sendEmail(
+      admin.email,
+      'Bienvenue sur GestiEcole — votre école est créée',
+      welcomeEmail(admin.nom, ecole.nom_ecole, ecole.annee_scolaire, essaiFin),
+    );
 
     return json(200, { ecole_id: ecoleId, essai_fin: essaiFin });
   } catch (e) {
