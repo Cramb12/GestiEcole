@@ -22,6 +22,7 @@ function json(status: number, body: unknown) {
 }
 
 const APP_URL = Deno.env.get('APP_URL') || 'https://www.gestiecole.com';
+const LOGIN_URL = `${APP_URL.replace(/\/+$/, '')}/login`;
 const MAIL_FROM = Deno.env.get('MAIL_FROM') || 'GestiEcole <noreply@gestiecole.com>';
 
 // Send one transactional email via Resend. Never throws — email is best-effort
@@ -55,7 +56,7 @@ function welcomeEmail(nom: string, ecole: string, annee: string, essaiFin: strin
   <p>Votre période d'essai gratuite de 30 jours est active jusqu'au <strong>${frDate(essaiFin)}</strong>. Vous avez accès à toutes les fonctionnalités, sans engagement.</p>
   <p><strong>Prochaines étapes pour bien démarrer :</strong></p>
   <ol>
-    <li>Connectez-vous avec l'email et le mot de passe que vous avez choisis : <a href="${APP_URL}">${APP_URL}</a></li>
+    <li>Connectez-vous avec l'email et le mot de passe que vous avez choisis : <a href="${LOGIN_URL}">${LOGIN_URL}</a></li>
     <li>Vérifiez la structure déjà préparée (niveaux, périodes) et créez vos classes.</li>
     <li>Ajoutez vos enseignants — chacun recevra ses identifiants par email.</li>
     <li>Inscrivez vos élèves et commencez à saisir les notes.</li>

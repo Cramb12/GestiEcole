@@ -23,6 +23,7 @@ function json(status: number, body: unknown) {
 }
 
 const APP_URL = Deno.env.get('APP_URL') || 'https://www.gestiecole.com';
+const LOGIN_URL = `${APP_URL.replace(/\/+$/, '')}/login`;
 const MAIL_FROM = Deno.env.get('MAIL_FROM') || 'GestiEcole <noreply@gestiecole.com>';
 
 // Send one transactional email via Resend. Never throws — email is best-effort
@@ -52,7 +53,7 @@ function credentialsEmail(nom: string, ecole: string, email: string, password: s
   <p>Un compte enseignant a été créé pour vous sur GestiEcole par la direction de « <strong>${esc(ecole)}</strong> ».</p>
   <p><strong>Voici vos identifiants de connexion :</strong></p>
   <p style="background:#f4f4f5;padding:12px 16px;border-radius:6px">
-    Adresse : <a href="${APP_URL}">${APP_URL}</a><br>
+    Adresse : <a href="${LOGIN_URL}">${LOGIN_URL}</a><br>
     Email : <strong>${esc(email)}</strong><br>
     Mot de passe : <strong>${esc(password)}</strong>
   </p>
