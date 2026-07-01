@@ -64,16 +64,26 @@ export async function recomputeNotes(classeId, brancheId, periode, M, anneeScola
   const ex = evalList.filter((e) => e.type === 'examen');
 
   const rows = (students || []).map((st) => {
+    const base = {
+      eleve_id: st.id, branche_id: brancheId, periode_id: periode.id, classe_id: classeId,
+      max_periode: mx.total, annee_scolaire: anneeScolaire,
+    };
+    // A student must have a mark for EVERY existing evaluation. If a single one
+    // is missing, the period is left uncomputed (null) so the bulletin flags the
+    // student as incomplete — a missing mark must never be averaged away or
+    // silently treated as if it didn't exist.
+    const complete = evalList.length > 0 && evalList.every((ev) => byEleve[st.id]?.[ev.id] != null);
+    if (!complete) {
+      return { ...base, points_journaliers_1: null, points_journaliers_2: null, points_examen: null, points_obtenus: null };
+    }
     const a = avgPct(p1, st.id), b = avgPct(p2, st.id), c = avgPct(ex, st.id);
     const P1 = a == null ? null : round2((a / 100) * mx.tj1);
     const P2 = b == null ? null : round2((b / 100) * mx.tj2);
     const EX = c == null ? null : round2((c / 100) * mx.exam);
-    const any = P1 != null || P2 != null || EX != null;
     return {
-      eleve_id: st.id, branche_id: brancheId, periode_id: periode.id, classe_id: classeId,
+      ...base,
       points_journaliers_1: P1, points_journaliers_2: P2, points_examen: EX,
-      points_obtenus: any ? round2((P1 || 0) + (P2 || 0) + (EX || 0)) : null,
-      max_periode: mx.total, annee_scolaire: anneeScolaire,
+      points_obtenus: round2((P1 || 0) + (P2 || 0) + (EX || 0)),
     };
   });
   if (rows.length) await supabase.from('notes').upsert(rows, { onConflict: 'eleve_id,branche_id,periode_id' });

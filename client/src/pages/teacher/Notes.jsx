@@ -258,15 +258,18 @@ export default function Notes() {
                     <table className="data">
                       <thead><tr><th>Élève</th><th>P1 /{M}</th><th>P2 /{M}</th><th>Examen /{M * 2}</th><th>Total /{M * 4}</th></tr></thead>
                       <tbody>
-                        {summary.map((n) => (
-                          <tr key={n.eleve_id}>
-                            <td><strong>{fullName(n.eleves)}</strong></td>
-                            <td>{n.points_journaliers_1 ?? '—'}</td>
-                            <td>{n.points_journaliers_2 ?? '—'}</td>
-                            <td>{n.points_examen ?? '—'}</td>
-                            <td><strong>{n.points_obtenus ?? '—'}</strong></td>
-                          </tr>
-                        ))}
+                        {summary.map((n) => {
+                          const incomplet = evaluations.length > 0 && n.points_obtenus == null;
+                          return (
+                            <tr key={n.eleve_id} className={incomplet ? 'row-missing' : undefined}>
+                              <td><strong>{fullName(n.eleves)}</strong>{incomplet && <span className="pill pill-red" style={{ marginLeft: 6 }}>Incomplet</span>}</td>
+                              <td>{n.points_journaliers_1 ?? '—'}</td>
+                              <td>{n.points_journaliers_2 ?? '—'}</td>
+                              <td>{n.points_examen ?? '—'}</td>
+                              <td><strong>{n.points_obtenus ?? '—'}</strong></td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -369,17 +372,21 @@ function ScoreModal({ evaluation, classeId, locked, onClose, onSaved }) {
     >
       {err && <div className="alert-error">{err}</div>}
       {locked && <div className="locked-banner">Période verrouillée — lecture seule.</div>}
+      {!locked && <p className="admin-sub" style={{ marginTop: 0 }}>Les cases surlignées n'ont pas encore de note. Tant qu'une note manque, l'élève apparaît « Incomplet » et son total n'est pas calculé. Pour compter une absence comme échec, saisissez 0.</p>}
       {loading ? <div className="empty-state">Chargement…</div> : (
         <div className="table-wrap">
           <table className="data">
             <thead><tr><th>Élève</th><th style={{ width: 110 }}>Note /{evaluation.note_max}</th></tr></thead>
             <tbody>
-              {students.map((e) => (
-                <tr key={e.id}>
-                  <td><strong>{fullName(e)}</strong></td>
-                  <td><input className="input" style={{ maxWidth: 90 }} type="number" min="0" max={evaluation.note_max} value={marks[e.id] ?? ''} disabled={locked} onChange={(ev) => set(e.id, ev.target.value)} /></td>
-                </tr>
-              ))}
+              {students.map((e) => {
+                const missing = marks[e.id] === '' || marks[e.id] == null;
+                return (
+                  <tr key={e.id} className={missing ? 'row-missing' : undefined}>
+                    <td><strong>{fullName(e)}</strong></td>
+                    <td><input className={'input' + (missing ? ' input-missing' : '')} style={{ maxWidth: 90 }} type="number" min="0" max={evaluation.note_max} value={marks[e.id] ?? ''} disabled={locked} onChange={(ev) => set(e.id, ev.target.value)} /></td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
