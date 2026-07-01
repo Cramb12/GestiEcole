@@ -1,6 +1,7 @@
 // Shared layout — top bar with brand, user info, and logout.
 import { useAuth } from '../context/AuthContext.jsx';
 import { useNavigate } from 'react-router-dom';
+import OfflineBanner from './OfflineBanner.jsx';
 
 export default function Layout({ children, ecoleNom }) {
   const { user, logout } = useAuth();
@@ -30,6 +31,7 @@ export default function Layout({ children, ecoleNom }) {
           </button>
         </div>
       </header>
+      <OfflineBanner />
       <main className="page">{children}</main>
     </div>
   );

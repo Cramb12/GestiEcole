@@ -9,6 +9,8 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { brancheApplies } from '../../lib/notes.js';
 import { isLocked, resolveSousPeriode, recomputeNotes } from '../../lib/gradebook.js';
 import { fetchAll } from '../../lib/db.js';
+import { saveDraft, loadDraft, clearDraft } from '../../lib/drafts.js';
+import { useOnline } from '../../hooks/useOnline.js';
 import Layout from '../../components/Layout.jsx';
 import Modal from '../../components/Modal.jsx';
 
@@ -330,37 +332,56 @@ export default function Notes() {
 
 // --- Score entry for one evaluation -----------------------------------
 function ScoreModal({ evaluation, classeId, locked, onClose, onSaved }) {
+  const online = useOnline();
+  const draftKey = `notes:${evaluation.id}`;
   const [students, setStudents] = useState([]);
   const [marks, setMarks] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState(null);
+  const [restored, setRestored] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      const [els, sc] = await Promise.all([
-        supabase.from('eleves').select('id, nom, postnom, prenom').eq('classe_id', classeId).eq('actif', true).order('nom'),
-        supabase.from('evaluation_scores').select('eleve_id, note').eq('evaluation_id', evaluation.id),
-      ]);
-      setStudents(els.data || []);
-      const m = {}; (sc.data || []).forEach((s) => (m[s.eleve_id] = s.note ?? '')); setMarks(m);
-      setLoading(false);
-    })();
-  }, [evaluation.id, classeId]);
+  async function loadScores(useDraft = true) {
+    setLoading(true);
+    const [els, sc] = await Promise.all([
+      supabase.from('eleves').select('id, nom, postnom, prenom').eq('classe_id', classeId).eq('actif', true).order('nom'),
+      supabase.from('evaluation_scores').select('eleve_id, note').eq('evaluation_id', evaluation.id),
+    ]);
+    setStudents(els.data || []);
+    const m = {}; (sc.data || []).forEach((s) => (m[s.eleve_id] = s.note ?? ''));
+    // Prefer an unsent local draft over the server values so nothing typed is lost.
+    const d = useDraft ? loadDraft(draftKey) : null;
+    if (d && typeof d === 'object') { setMarks(d); setRestored(true); }
+    else { setMarks(m); setRestored(false); }
+    setLoading(false);
+  }
+
+  useEffect(() => { loadScores(true); /* eslint-disable-next-line */ }, [evaluation.id, classeId]);
+
+  function discardDraft() { clearDraft(draftKey); loadScores(false); }
 
   function set(id, v) {
     if (locked) return;
     let x = v;
     if (x !== '') { let n = Number(x); if (Number.isNaN(n)) x = ''; else { if (n < 0) n = 0; if (n > Number(evaluation.note_max)) n = Number(evaluation.note_max); x = String(n); } }
-    setMarks((p) => ({ ...p, [id]: x }));
+    // Persist every keystroke locally (offline-safe) — cleared once saved.
+    setMarks((p) => { const next = { ...p, [id]: x }; saveDraft(draftKey, next); return next; });
   }
 
   async function save() {
     setSaving(true); setErr(null);
     const rows = students.map((e) => ({ evaluation_id: evaluation.id, eleve_id: e.id, classe_id: classeId, note: marks[e.id] === '' || marks[e.id] == null ? null : Number(marks[e.id]) }));
-    const { error } = await supabase.from('evaluation_scores').upsert(rows, { onConflict: 'evaluation_id,eleve_id' });
+    let error;
+    try { ({ error } = await supabase.from('evaluation_scores').upsert(rows, { onConflict: 'evaluation_id,eleve_id' })); }
+    catch (e) { error = e; }
     setSaving(false);
-    if (error) { setErr(error.message); return; }
+    if (error) {
+      setErr(online
+        ? (error.message || String(error))
+        : "Hors ligne : votre saisie reste conservée sur cet appareil. Rouvrez cette évaluation une fois Internet revenu pour l'enregistrer.");
+      return;
+    }
+    clearDraft(draftKey);
     onSaved();
   }
 
@@ -371,6 +392,12 @@ function ScoreModal({ evaluation, classeId, locked, onClose, onSaved }) {
       footer={locked ? <button className="btn btn-secondary" onClick={onClose}>Fermer</button> : <><button className="btn btn-secondary" onClick={onClose}>Annuler</button><button className="btn btn-primary" onClick={save} disabled={saving}>{saving ? '…' : 'Enregistrer'}</button></>}
     >
       {err && <div className="alert-error">{err}</div>}
+      {restored && !locked && (
+        <div className="locked-banner" style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'space-between' }}>
+          <span>Brouillon restauré : une saisie non encore envoyée a été retrouvée sur cet appareil.</span>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={discardDraft}>Repartir du serveur</button>
+        </div>
+      )}
       {locked && <div className="locked-banner">Période verrouillée — lecture seule.</div>}
       {!locked && <p className="admin-sub" style={{ marginTop: 0 }}>Les cases surlignées n'ont pas encore de note. Tant qu'une note manque, l'élève apparaît « Incomplet » et son total n'est pas calculé. Pour compter une absence comme échec, saisissez 0.</p>}
       {loading ? <div className="empty-state">Chargement…</div> : (

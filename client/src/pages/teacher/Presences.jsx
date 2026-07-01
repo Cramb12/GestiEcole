@@ -7,6 +7,8 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase.js';
 import { useEcole } from '../../lib/useEcole.js';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { saveDraft, loadDraft, clearDraft } from '../../lib/drafts.js';
+import { useOnline } from '../../hooks/useOnline.js';
 import Layout from '../../components/Layout.jsx';
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -26,6 +28,8 @@ export default function Presences() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState(null);
+  const [restored, setRestored] = useState(false);
+  const online = useOnline();
 
   // Build the teacher's attendance contexts (primary classes + secondary courses).
   useEffect(() => {
@@ -53,6 +57,7 @@ export default function Presences() {
   }, [user]);
 
   const ctx = useMemo(() => contexts.find((c) => c.key === ctxKey), [contexts, ctxKey]);
+  const draftKey = ctx ? `presences:${ctx.key}:${date}` : null;
 
   // Load students + any existing attendance for the chosen context + date.
   useEffect(() => {
@@ -76,23 +81,30 @@ export default function Presences() {
       if (existing && existing.length) {
         existing.forEach((p) => (m[p.eleve_id] = { statut: p.statut, note: p.note_absence || '' }));
         setLocked(true);
+        setMarks(m);
+        setRestored(false);
       } else {
         (els || []).forEach((e) => (m[e.id] = { statut: 'present', note: '' }));
         setLocked(false);
+        // Restore an unsent local draft (offline-safe) over the defaults.
+        const key = ctx ? `presences:${ctx.key}:${date}` : null;
+        const d = key ? loadDraft(key) : null;
+        if (d && typeof d === 'object') { setMarks(d); setRestored(true); }
+        else { setMarks(m); setRestored(false); }
       }
-      setMarks(m);
       setLoading(false);
     }
     loadDay();
   }, [ctx, date]);
 
+  function persist(next) { if (draftKey) saveDraft(draftKey, next); }
   function setStatut(eleveId, statut) {
     if (locked) return;
-    setMarks((prev) => ({ ...prev, [eleveId]: { ...prev[eleveId], statut } }));
+    setMarks((prev) => { const next = { ...prev, [eleveId]: { ...prev[eleveId], statut } }; persist(next); return next; });
   }
   function setNote(eleveId, note) {
     if (locked) return;
-    setMarks((prev) => ({ ...prev, [eleveId]: { ...prev[eleveId], note } }));
+    setMarks((prev) => { const next = { ...prev, [eleveId]: { ...prev[eleveId], note } }; persist(next); return next; });
   }
 
   async function submit() {
@@ -109,12 +121,18 @@ export default function Presences() {
       enseignant_id: user.id,
       annee_scolaire: ecole?.annee_scolaire || '',
     }));
-    const { error } = await supabase.from('presences').insert(rows);
+    let error;
+    try { ({ error } = await supabase.from('presences').insert(rows)); }
+    catch (e) { error = e; }
     setSaving(false);
     if (error) {
-      setMsg({ type: 'error', text: error.message });
+      setMsg({ type: 'error', text: online
+        ? error.message
+        : "Hors ligne : votre appel reste conservé sur cet appareil. Revenez sur cette page une fois Internet revenu pour le soumettre." });
       return;
     }
+    if (draftKey) clearDraft(draftKey);
+    setRestored(false);
     setLocked(true);
     setMsg({ type: 'success', text: "Appel enregistré et verrouillé pour la journée." });
   }
@@ -160,6 +178,7 @@ export default function Presences() {
           </div>
 
           {msg && <div className={msg.type === 'success' ? 'alert-success' : 'alert-error'}>{msg.text}</div>}
+          {restored && !locked && <div className="locked-banner">Brouillon restauré : un appel non encore soumis a été retrouvé sur cet appareil.</div>}
 
           {loading ? (
             <div className="empty-state">Chargement de la liste…</div>
