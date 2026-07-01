@@ -11,6 +11,7 @@ import { isLocked, resolveSousPeriode, recomputeNotes } from '../../lib/gradeboo
 import { fetchAll } from '../../lib/db.js';
 import { saveDraft, loadDraft, clearDraft } from '../../lib/drafts.js';
 import { enqueue, processOutbox } from '../../lib/outbox.js';
+import { readThrough } from '../../lib/cache.js';
 import { useOnline } from '../../hooks/useOnline.js';
 import Layout from '../../components/Layout.jsx';
 import Modal from '../../components/Modal.jsx';
@@ -45,13 +46,19 @@ export default function Notes() {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const [tit, aff] = await Promise.all([
-        supabase.from('classes').select('id, nom, annee, niveau_id, section_id, niveaux(type)').eq('titulaire_id', user.id),
-        supabase.from('enseignant_branches').select('classe_id, classes(id, nom, annee, niveau_id, section_id, niveaux(type)), branches(id, nom, max_points)').eq('teacher_id', user.id),
-      ]);
+      const { data } = await readThrough(`ctx:notes:${user.id}`, async () => {
+        const [tit, aff] = await Promise.all([
+          supabase.from('classes').select('id, nom, annee, niveau_id, section_id, niveaux(type)').eq('titulaire_id', user.id),
+          supabase.from('enseignant_branches').select('classe_id, classes(id, nom, annee, niveau_id, section_id, niveaux(type)), branches(id, nom, max_points)').eq('teacher_id', user.id),
+        ]);
+        if (tit.error) throw tit.error;
+        if (aff.error) throw aff.error;
+        return { tit: tit.data || [], aff: aff.data || [] };
+      });
+      const d = data || { tit: [], aff: [] };
       const map = {};
-      (tit.data || []).forEach((c) => { map[c.id] = map[c.id] || { classe: c, isPrimaryTit: c.niveaux?.type === 'primaire', assigned: [] }; });
-      (aff.data || []).forEach((a) => { const c = a.classes; if (!c) return; map[c.id] = map[c.id] || { classe: c, isPrimaryTit: false, assigned: [] }; if (a.branches) map[c.id].assigned.push(a.branches); });
+      d.tit.forEach((c) => { map[c.id] = map[c.id] || { classe: c, isPrimaryTit: c.niveaux?.type === 'primaire', assigned: [] }; });
+      d.aff.forEach((a) => { const c = a.classes; if (!c) return; map[c.id] = map[c.id] || { classe: c, isPrimaryTit: false, assigned: [] }; if (a.branches) map[c.id].assigned.push(a.branches); });
       setClassMap(map);
       const ids = Object.keys(map);
       if (ids.length) setClasseId(ids[0]);
@@ -65,12 +72,22 @@ export default function Notes() {
     if (!entry) { setCourses([]); setPeriodes([]); return; }
     (async () => {
       const c = entry.classe;
-      const { data: per } = await supabase.from('periodes').select('*').eq('niveau_id', c.niveau_id).order('numero');
-      setPeriodes(per || []);
-      setPeriodeId(per && per.length ? per[0].id : '');
+      const { data } = await readThrough(`notes:cls:${c.id}`, async () => {
+        const per = await supabase.from('periodes').select('*').eq('niveau_id', c.niveau_id).order('numero');
+        if (per.error) throw per.error;
+        let br = null;
+        if (entry.isPrimaryTit) {
+          const r = await supabase.from('branches').select('id, nom, max_points, annee, section_id').eq('niveau_id', c.niveau_id).is('section_id', null).order('ordre').order('nom');
+          if (r.error) throw r.error;
+          br = r.data || [];
+        }
+        return { per: per.data || [], br };
+      });
+      const d = data || { per: [], br: null };
+      setPeriodes(d.per);
+      setPeriodeId(d.per.length ? d.per[0].id : '');
       if (entry.isPrimaryTit) {
-        const { data: br } = await supabase.from('branches').select('id, nom, max_points, annee, section_id').eq('niveau_id', c.niveau_id).is('section_id', null).order('ordre').order('nom');
-        const list = (br || []).filter((b) => brancheApplies(b.annee, c.annee));
+        const list = (d.br || []).filter((b) => brancheApplies(b.annee, c.annee));
         setCourses(list); setBrancheId(list.length ? list[0].id : '');
       } else {
         setCourses(entry.assigned); setBrancheId(entry.assigned.length ? entry.assigned[0].id : '');
@@ -92,21 +109,26 @@ export default function Notes() {
   // ---- Load the gradebook for the chosen (class, course, period) ---------
   async function loadGradebook() {
     if (!classeId || !brancheId || !periodeId) { setEvaluations([]); setSummary([]); return; }
-    const [{ data: sps }, { data: evals }, { data: notes }] = await Promise.all([
-      supabase.from('sous_periodes').select('*').eq('periode_id', periodeId).order('numero'),
-      supabase.from('evaluations').select('*').eq('classe_id', classeId).eq('branche_id', brancheId).eq('periode_id', periodeId).order('date'),
-      supabase.from('notes').select('eleve_id, points_journaliers_1, points_journaliers_2, points_examen, points_obtenus, max_periode, eleves(nom, postnom, prenom)').eq('classe_id', classeId).eq('branche_id', brancheId).eq('periode_id', periodeId),
-    ]);
-    setSousPeriodes(sps || []);
-    setEvaluations(evals || []);
-    const ids = (evals || []).map((e) => e.id);
-    if (ids.length) {
+    const { data } = await readThrough(`notes:gb:${classeId}:${brancheId}:${periodeId}`, async () => {
+      const [sps, evals, notes] = await Promise.all([
+        supabase.from('sous_periodes').select('*').eq('periode_id', periodeId).order('numero'),
+        supabase.from('evaluations').select('*').eq('classe_id', classeId).eq('branche_id', brancheId).eq('periode_id', periodeId).order('date'),
+        supabase.from('notes').select('eleve_id, points_journaliers_1, points_journaliers_2, points_examen, points_obtenus, max_periode, eleves(nom, postnom, prenom)').eq('classe_id', classeId).eq('branche_id', brancheId).eq('periode_id', periodeId),
+      ]);
+      if (sps.error) throw sps.error;
+      if (evals.error) throw evals.error;
+      if (notes.error) throw notes.error;
+      const ids = (evals.data || []).map((e) => e.id);
       // Paginate: students × evaluations can exceed the 1000-row cap for a busy class.
-      const sc = await fetchAll(() => supabase.from('evaluation_scores').select('evaluation_id, note').in('evaluation_id', ids).order('id'));
-      const cnt = {}; sc.forEach((s) => { if (s.note != null) cnt[s.evaluation_id] = (cnt[s.evaluation_id] || 0) + 1; });
-      setScoreCounts(cnt);
-    } else setScoreCounts({});
-    setSummary((notes || []).sort((a, b) => fullName(a.eleves).localeCompare(fullName(b.eleves))));
+      const scores = ids.length ? await fetchAll(() => supabase.from('evaluation_scores').select('evaluation_id, note').in('evaluation_id', ids).order('id')) : [];
+      return { sps: sps.data || [], evals: evals.data || [], notes: notes.data || [], scores };
+    });
+    const d = data || { sps: [], evals: [], notes: [], scores: [] };
+    setSousPeriodes(d.sps);
+    setEvaluations(d.evals);
+    const cnt = {}; (d.scores || []).forEach((s) => { if (s.note != null) cnt[s.evaluation_id] = (cnt[s.evaluation_id] || 0) + 1; });
+    setScoreCounts(cnt);
+    setSummary((d.notes || []).slice().sort((a, b) => fullName(a.eleves).localeCompare(fullName(b.eleves))));
   }
 
   useEffect(() => { loadGradebook(); /* eslint-disable-next-line */ }, [classeId, brancheId, periodeId]);
@@ -348,15 +370,21 @@ function ScoreModal({ evaluation, classeId, brancheId, periode, M, annee, locked
 
   async function loadScores(useDraft = true) {
     setLoading(true);
-    const [els, sc] = await Promise.all([
-      supabase.from('eleves').select('id, nom, postnom, prenom').eq('classe_id', classeId).eq('actif', true).order('nom'),
-      supabase.from('evaluation_scores').select('eleve_id, note').eq('evaluation_id', evaluation.id),
-    ]);
-    setStudents(els.data || []);
-    const m = {}; (sc.data || []).forEach((s) => (m[s.eleve_id] = s.note ?? ''));
+    const { data } = await readThrough(`notes:sm:${classeId}:${evaluation.id}`, async () => {
+      const [els, sc] = await Promise.all([
+        supabase.from('eleves').select('id, nom, postnom, prenom').eq('classe_id', classeId).eq('actif', true).order('nom'),
+        supabase.from('evaluation_scores').select('eleve_id, note').eq('evaluation_id', evaluation.id),
+      ]);
+      if (els.error) throw els.error;
+      if (sc.error) throw sc.error;
+      return { els: els.data || [], sc: sc.data || [] };
+    });
+    const d = data || { els: [], sc: [] };
+    setStudents(d.els);
+    const m = {}; d.sc.forEach((s) => (m[s.eleve_id] = s.note ?? ''));
     // Prefer an unsent local draft over the server values so nothing typed is lost.
-    const d = useDraft ? loadDraft(draftKey) : null;
-    if (d && typeof d === 'object') { setMarks(d); setRestored(true); }
+    const dr = useDraft ? loadDraft(draftKey) : null;
+    if (dr && typeof dr === 'object') { setMarks(dr); setRestored(true); }
     else { setMarks(m); setRestored(false); }
     setLoading(false);
   }

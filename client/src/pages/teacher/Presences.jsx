@@ -9,6 +9,7 @@ import { useEcole } from '../../lib/useEcole.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { saveDraft, loadDraft, clearDraft } from '../../lib/drafts.js';
 import { enqueue, processOutbox } from '../../lib/outbox.js';
+import { readThrough } from '../../lib/cache.js';
 import { useOnline } from '../../hooks/useOnline.js';
 import Layout from '../../components/Layout.jsx';
 
@@ -36,18 +37,24 @@ export default function Presences() {
   useEffect(() => {
     if (!user) return;
     async function loadContexts() {
-      const [tit, aff] = await Promise.all([
-        supabase.from('classes').select('id, nom, niveaux(type)').eq('titulaire_id', user.id),
-        supabase
-          .from('enseignant_branches')
-          .select('id, branche_id, classe_id, branches(nom), classes(nom, niveaux(type))')
-          .eq('teacher_id', user.id),
-      ]);
+      const { data } = await readThrough(`ctx:pres:${user.id}`, async () => {
+        const [tit, aff] = await Promise.all([
+          supabase.from('classes').select('id, nom, niveaux(type)').eq('titulaire_id', user.id),
+          supabase
+            .from('enseignant_branches')
+            .select('id, branche_id, classe_id, branches(nom), classes(nom, niveaux(type))')
+            .eq('teacher_id', user.id),
+        ]);
+        if (tit.error) throw tit.error;
+        if (aff.error) throw aff.error;
+        return { tit: tit.data || [], aff: aff.data || [] };
+      });
+      const d = data || { tit: [], aff: [] };
       const list = [];
-      (tit.data || [])
+      d.tit
         .filter((c) => c.niveaux?.type === 'primaire')
         .forEach((c) => list.push({ key: 'p-' + c.id, label: `${c.nom} — appel journalier`, classe_id: c.id, branche_id: null }));
-      (aff.data || [])
+      d.aff
         .filter((a) => a.classes?.niveaux?.type === 'secondaire')
         .forEach((a) => list.push({ key: 's-' + a.id, label: `${a.branches?.nom} — ${a.classes?.nom}`, classe_id: a.classe_id, branche_id: a.branche_id }));
       setContexts(list);
@@ -66,17 +73,18 @@ export default function Presences() {
     async function loadDay() {
       setLoading(true);
       setMsg(null);
-      const { data: els } = await supabase
-        .from('eleves')
-        .select('id, nom, postnom, prenom')
-        .eq('classe_id', ctx.classe_id)
-        .eq('actif', true)
-        .order('nom');
-      setStudents(els || []);
-
-      let q = supabase.from('presences').select('*').eq('classe_id', ctx.classe_id).eq('date', date);
-      q = ctx.branche_id ? q.eq('branche_id', ctx.branche_id) : q.is('branche_id', null);
-      const { data: existing } = await q;
+      const { data } = await readThrough(`pres:day:${ctx.classe_id}:${ctx.branche_id || 'null'}:${date}`, async () => {
+        const els = await supabase.from('eleves').select('id, nom, postnom, prenom').eq('classe_id', ctx.classe_id).eq('actif', true).order('nom');
+        if (els.error) throw els.error;
+        let q = supabase.from('presences').select('*').eq('classe_id', ctx.classe_id).eq('date', date);
+        q = ctx.branche_id ? q.eq('branche_id', ctx.branche_id) : q.is('branche_id', null);
+        const existing = await q;
+        if (existing.error) throw existing.error;
+        return { els: els.data || [], existing: existing.data || [] };
+      });
+      const els = (data || {}).els || [];
+      const existing = (data || {}).existing || [];
+      setStudents(els);
 
       const m = {};
       if (existing && existing.length) {
