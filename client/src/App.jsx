@@ -1,5 +1,6 @@
 // App routes — role-based redirection + admin configuration screens.
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import { useAuth } from './context/AuthContext.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Login from './pages/Login.jsx';
@@ -52,76 +53,79 @@ function Admin({ children }) {
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/login/direction" element={<Login variant="direction" />} />
-      <Route path="/login/enseignant" element={<Login variant="enseignant" />} />
-      <Route path="/login/percepteur" element={<Login variant="percepteur" />} />
-      <Route path="/login/inscriptions" element={<Login variant="inscriptions" />} />
-      <Route path="/mot-de-passe-oublie" element={<MotDePasseOublie />} />
-      <Route path="/reset-password" element={<ReinitialiserMotDePasse />} />
-      <Route path="/inscription" element={<Inscription />} />
-      <Route path="/vendeur" element={<ProtectedRoute owner><Vendeur /></ProtectedRoute>} />
-      <Route path="/percepteur" element={<ProtectedRoute role={['percepteur', 'super_admin']}><Encaisser /></ProtectedRoute>} />
-      <Route path="/percepteur/rapports" element={<ProtectedRoute role={['percepteur', 'super_admin']}><RapportsFinances /></ProtectedRoute>} />
-      <Route path="/inscriptions" element={<ProtectedRoute role={['inscripteur', 'super_admin']}><InscripteurEleves /></ProtectedRoute>} />
+    <>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/login/direction" element={<Login variant="direction" />} />
+        <Route path="/login/enseignant" element={<Login variant="enseignant" />} />
+        <Route path="/login/percepteur" element={<Login variant="percepteur" />} />
+        <Route path="/login/inscriptions" element={<Login variant="inscriptions" />} />
+        <Route path="/mot-de-passe-oublie" element={<MotDePasseOublie />} />
+        <Route path="/reset-password" element={<ReinitialiserMotDePasse />} />
+        <Route path="/inscription" element={<Inscription />} />
+        <Route path="/vendeur" element={<ProtectedRoute owner><Vendeur /></ProtectedRoute>} />
+        <Route path="/percepteur" element={<ProtectedRoute role={['percepteur', 'super_admin']}><Encaisser /></ProtectedRoute>} />
+        <Route path="/percepteur/rapports" element={<ProtectedRoute role={['percepteur', 'super_admin']}><RapportsFinances /></ProtectedRoute>} />
+        <Route path="/inscriptions" element={<ProtectedRoute role={['inscripteur', 'super_admin']}><InscripteurEleves /></ProtectedRoute>} />
 
-      {/* Super Admin */}
-      <Route path="/admin" element={<Admin><AdminDashboard /></Admin>} />
-      <Route path="/admin/configuration" element={<Admin><Configuration /></Admin>} />
-      <Route path="/admin/classes" element={<Admin><Classes /></Admin>} />
-      <Route path="/admin/matieres" element={<Admin><Branches /></Admin>} />
-      <Route path="/admin/sections" element={<Admin><Sections /></Admin>} />
-      <Route path="/admin/enseignants" element={<Admin><Enseignants /></Admin>} />
-      <Route path="/admin/eleves" element={<Admin><Eleves /></Admin>} />
-      <Route path="/admin/eleves/:id" element={<Admin><EleveProfile /></Admin>} />
-      <Route path="/admin/eleves/:id/bulletin" element={<Admin><BulletinEleve /></Admin>} />
-      <Route path="/admin/presences" element={<Admin><AdminPresences /></Admin>} />
-      <Route path="/admin/notes" element={<Admin><AdminNotes /></Admin>} />
-      <Route path="/admin/bulletins" element={<Admin><Bulletins /></Admin>} />
-      <Route path="/admin/rapports" element={<Admin><Rapports /></Admin>} />
-      <Route path="/admin/horaire" element={<Admin><Horaire /></Admin>} />
-      <Route path="/admin/creneaux" element={<Admin><Creneaux /></Admin>} />
-      <Route path="/admin/periodes" element={<Admin><Periodes /></Admin>} />
-      <Route path="/admin/frais" element={<Admin><Frais /></Admin>} />
-      <Route path="/admin/personnel" element={<Admin><Personnel /></Admin>} />
+        {/* Super Admin */}
+        <Route path="/admin" element={<Admin><AdminDashboard /></Admin>} />
+        <Route path="/admin/configuration" element={<Admin><Configuration /></Admin>} />
+        <Route path="/admin/classes" element={<Admin><Classes /></Admin>} />
+        <Route path="/admin/matieres" element={<Admin><Branches /></Admin>} />
+        <Route path="/admin/sections" element={<Admin><Sections /></Admin>} />
+        <Route path="/admin/enseignants" element={<Admin><Enseignants /></Admin>} />
+        <Route path="/admin/eleves" element={<Admin><Eleves /></Admin>} />
+        <Route path="/admin/eleves/:id" element={<Admin><EleveProfile /></Admin>} />
+        <Route path="/admin/eleves/:id/bulletin" element={<Admin><BulletinEleve /></Admin>} />
+        <Route path="/admin/presences" element={<Admin><AdminPresences /></Admin>} />
+        <Route path="/admin/notes" element={<Admin><AdminNotes /></Admin>} />
+        <Route path="/admin/bulletins" element={<Admin><Bulletins /></Admin>} />
+        <Route path="/admin/rapports" element={<Admin><Rapports /></Admin>} />
+        <Route path="/admin/horaire" element={<Admin><Horaire /></Admin>} />
+        <Route path="/admin/creneaux" element={<Admin><Creneaux /></Admin>} />
+        <Route path="/admin/periodes" element={<Admin><Periodes /></Admin>} />
+        <Route path="/admin/frais" element={<Admin><Frais /></Admin>} />
+        <Route path="/admin/personnel" element={<Admin><Personnel /></Admin>} />
 
-      {/* Teacher */}
-      <Route
-        path="/enseignant"
-        element={
-          <ProtectedRoute role="teacher">
-            <TeacherDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/enseignant/presences"
-        element={
-          <ProtectedRoute role="teacher">
-            <TeacherPresences />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/enseignant/notes"
-        element={
-          <ProtectedRoute role="teacher">
-            <TeacherNotes />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/enseignant/horaire"
-        element={
-          <ProtectedRoute role="teacher">
-            <HoraireTeacher />
-          </ProtectedRoute>
-        }
-      />
+        {/* Teacher */}
+        <Route
+          path="/enseignant"
+          element={
+            <ProtectedRoute role="teacher">
+              <TeacherDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/enseignant/presences"
+          element={
+            <ProtectedRoute role="teacher">
+              <TeacherPresences />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/enseignant/notes"
+          element={
+            <ProtectedRoute role="teacher">
+              <TeacherNotes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/enseignant/horaire"
+          element={
+            <ProtectedRoute role="teacher">
+              <HoraireTeacher />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      <Analytics />
+    </>
   );
 }
