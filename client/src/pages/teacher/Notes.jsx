@@ -10,6 +10,7 @@ import { brancheApplies } from '../../lib/notes.js';
 import { isLocked, resolveSousPeriode, recomputeNotes } from '../../lib/gradebook.js';
 import { fetchAll } from '../../lib/db.js';
 import { saveDraft, loadDraft, clearDraft } from '../../lib/drafts.js';
+import { enqueue, processOutbox } from '../../lib/outbox.js';
 import { useOnline } from '../../hooks/useOnline.js';
 import Layout from '../../components/Layout.jsx';
 import Modal from '../../components/Modal.jsx';
@@ -321,9 +322,13 @@ export default function Notes() {
         <ScoreModal
           evaluation={scoreModal}
           classeId={classeId}
+          brancheId={brancheId}
+          periode={periode}
+          M={M}
+          annee={annee}
           locked={evalLocked(scoreModal)}
           onClose={() => setScoreModal(null)}
-          onSaved={async () => { await recomputeNotes(classeId, brancheId, periode, M, annee); setScoreModal(null); loadGradebook(); }}
+          onSaved={() => { setScoreModal(null); loadGradebook(); }}
         />
       )}
     </Layout>
@@ -331,7 +336,7 @@ export default function Notes() {
 }
 
 // --- Score entry for one evaluation -----------------------------------
-function ScoreModal({ evaluation, classeId, locked, onClose, onSaved }) {
+function ScoreModal({ evaluation, classeId, brancheId, periode, M, annee, locked, onClose, onSaved }) {
   const online = useOnline();
   const draftKey = `notes:${evaluation.id}`;
   const [students, setStudents] = useState([]);
@@ -371,17 +376,18 @@ function ScoreModal({ evaluation, classeId, locked, onClose, onSaved }) {
   async function save() {
     setSaving(true); setErr(null);
     const rows = students.map((e) => ({ evaluation_id: evaluation.id, eleve_id: e.id, classe_id: classeId, note: marks[e.id] === '' || marks[e.id] == null ? null : Number(marks[e.id]) }));
-    let error;
-    try { ({ error } = await supabase.from('evaluation_scores').upsert(rows, { onConflict: 'evaluation_id,eleve_id' })); }
-    catch (e) { error = e; }
-    setSaving(false);
-    if (error) {
-      setErr(online
-        ? (error.message || String(error))
-        : "Hors ligne : votre saisie reste conservée sur cet appareil. Rouvrez cette évaluation une fois Internet revenu pour l'enregistrer.");
+    try {
+      // Durably queue the write (IndexedDB) then try to send now. If offline it
+      // stays queued and syncs automatically on reconnect.
+      await enqueue('scores', { rows, recompute: { classeId, brancheId, periode, M, annee } });
+    } catch (e) {
+      setSaving(false);
+      setErr("Impossible d'enregistrer sur l'appareil : " + (e?.message || e));
       return;
     }
     clearDraft(draftKey);
+    await processOutbox();
+    setSaving(false);
     onSaved();
   }
 

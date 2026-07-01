@@ -8,6 +8,7 @@ import { supabase } from '../../lib/supabase.js';
 import { useEcole } from '../../lib/useEcole.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { saveDraft, loadDraft, clearDraft } from '../../lib/drafts.js';
+import { enqueue, processOutbox } from '../../lib/outbox.js';
 import { useOnline } from '../../hooks/useOnline.js';
 import Layout from '../../components/Layout.jsx';
 
@@ -121,20 +122,23 @@ export default function Presences() {
       enseignant_id: user.id,
       annee_scolaire: ecole?.annee_scolaire || '',
     }));
-    let error;
-    try { ({ error } = await supabase.from('presences').insert(rows)); }
-    catch (e) { error = e; }
-    setSaving(false);
-    if (error) {
-      setMsg({ type: 'error', text: online
-        ? error.message
-        : "Hors ligne : votre appel reste conservé sur cet appareil. Revenez sur cette page une fois Internet revenu pour le soumettre." });
+    try {
+      // Durably queue the appel (IndexedDB) then try to send now; if offline it
+      // syncs automatically on reconnect.
+      await enqueue('presences', { rows });
+    } catch (e) {
+      setSaving(false);
+      setMsg({ type: 'error', text: "Impossible d'enregistrer sur l'appareil : " + (e?.message || e) });
       return;
     }
     if (draftKey) clearDraft(draftKey);
     setRestored(false);
+    await processOutbox();
+    setSaving(false);
     setLocked(true);
-    setMsg({ type: 'success', text: "Appel enregistré et verrouillé pour la journée." });
+    setMsg({ type: 'success', text: online
+      ? 'Appel enregistré et verrouillé pour la journée.'
+      : "Appel enregistré sur l'appareil — envoi automatique dès le retour d'Internet." });
   }
 
   const counts = useMemo(() => {
